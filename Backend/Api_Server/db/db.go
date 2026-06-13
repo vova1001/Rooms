@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"log"
 
-	c "rooms/Backend/Api_Server/internal/config"
+	c "rooms/config"
 
 	_ "github.com/lib/pq"
 )
