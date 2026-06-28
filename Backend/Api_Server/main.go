@@ -4,40 +4,43 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	d "rooms/Backend/Api_Server/db"
-	internal "rooms/Backend/Api_Server/internal"
-	c "rooms/Backend/Api_Server/internal/config"
 	"time"
+
+	"rooms/config"
+	"rooms/db"
+	"rooms/internal"
+
+	"github.com/gorilla/mux"
 )
 
 func main() {
-	cfg, err := c.LoadCfgDB()
+	cfg, err := config.LoadCfgDB()
 	if err != nil {
-		log.Fatalf("err load cfg:%v", err)
+		log.Fatalf("err load cfg: %v", err)
 	}
 
-	db, err := d.DBinit(cfg)
+	dbConn, err := db.DBinit(cfg)
 	if err != nil {
-		log.Fatalf("err conect from db: %v", err)
+		log.Fatalf("err connect from db: %v", err)
 	}
-	if err := d.Migrate(db); err != nil {
-		log.Fatalf("migrate err:%v", err)
+	if err := db.Migrate(dbConn); err != nil {
+		log.Fatalf("migrate err: %v", err)
 	}
 
-	repo := internal.NewRepo(db)
+	repo := internal.NewRepo(dbConn)
 	service := internal.NewService(repo)
 	handler := internal.NewHandler(service)
 
-	mux := http.DefaultServeMux
-
-	handler.RegisterRote(mux)
+	router := mux.NewRouter()
+	handler.RegisterRoutes(router)
 
 	server := http.Server{
 		Addr:         ":8080",
-		Handler:      mux,
+		Handler:      router,
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
-	fmt.Println("Api server is up!")
-	log.Fatal(server.ListenAndServe(), "Server is dead")
+
+	fmt.Println("API server is up on :8080")
+	log.Fatal(server.ListenAndServe())
 }
