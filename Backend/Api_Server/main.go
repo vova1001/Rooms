@@ -11,6 +11,7 @@ import (
 	"rooms/internal"
 
 	"github.com/gorilla/mux"
+	"github.com/redis/go-redis/v9"
 )
 
 func main() {
@@ -27,7 +28,17 @@ func main() {
 		log.Fatalf("migrate err: %v", err)
 	}
 
-	repo := internal.NewRepo(dbConn)
+	cfgRDB, err := config.LoadCfgRDB()
+	if err != nil {
+		log.Fatalf("err load cfgRDB: %v", err)
+	}
+
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     cfgRDB.RedisAdr,
+		Password: cfgRDB.RedisPass,
+	})
+
+	repo := internal.NewRepo(dbConn, rdb)
 	service := internal.NewService(repo)
 	handler := internal.NewHandler(service)
 

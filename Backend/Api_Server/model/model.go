@@ -10,19 +10,20 @@ type User struct {
 	ID        uuid.UUID `json:"id"`
 	Username  string    `json:"username"`
 	CreatedAt time.Time `json:"created_at"`
+	Avatar    string    `json:"avatar"`
 }
 
 type Room struct {
 	ID        uuid.UUID `json:"id"`
-	Name      string    `json:"name"`
+	RoomName  string    `json:"name"`
 	OwnerID   uuid.UUID `json:"owner_id"`
 	CreatedAt time.Time `json:"created_at"`
+	RoomUsers []RoomUser
 }
 
 type RoomUser struct {
 	RoomID   uuid.UUID `json:"room_id"`
-	UserID   uuid.UUID `json:"user_id"`
-	JoinedAt time.Time `json:"joined_at"`
+	UserInfo User
 }
 
 // res\req

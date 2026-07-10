@@ -1,4 +1,4 @@
-module Signal_Server
+module GateWay
 
 go 1.26.2
 

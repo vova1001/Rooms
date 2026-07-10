@@ -86,7 +86,7 @@ func (h *PartHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"id":         room.ID,
-		"name":       room.Name,
+		"name":       room.RoomName,
 		"owner_id":   room.OwnerID,
 		"created_at": room.CreatedAt,
 	})
@@ -102,7 +102,7 @@ func (h *PartHandler) GetAllRooms(w http.ResponseWriter, r *http.Request) {
 	for i, rm := range rooms {
 		resp[i] = map[string]interface{}{
 			"id":         rm.ID,
-			"name":       rm.Name,
+			"name":       rm.RoomName,
 			"owner_id":   rm.OwnerID,
 			"created_at": rm.CreatedAt,
 		}

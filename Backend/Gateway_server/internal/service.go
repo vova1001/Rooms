@@ -1,7 +1,7 @@
 package internal
 
 import (
-	m "Signal_Server/Models"
+	m "GateWay/models"
 
 	"context"
 	"fmt"

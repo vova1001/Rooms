@@ -12,14 +12,16 @@ import (
 	m "rooms/model"
 
 	"github.com/google/uuid"
+	"github.com/redis/go-redis/v9"
 )
 
 type PartRepo struct {
-	db *sql.DB
+	db  *sql.DB
+	rdb *redis.Client
 }
 
-func NewRepo(db *sql.DB) *PartRepo {
-	return &PartRepo{db: db}
+func NewRepo(db *sql.DB, rdb *redis.Client) *PartRepo {
+	return &PartRepo{db: db, rdb: rdb}
 }
 
 type UserRepository interface {
@@ -87,7 +89,7 @@ func (r *PartRepo) CreateRoom(ctx context.Context, name string, ownerID uuid.UUI
 	}
 	return &m.Room{
 		ID:        id,
-		Name:      name,
+		RoomName:  name,
 		OwnerID:   ownerID,
 		CreatedAt: createdAt,
 	}, nil
@@ -108,15 +110,60 @@ func (r *PartRepo) GetAllRooms(ctx context.Context) ([]*m.Room, error) {
 	var rooms []*m.Room
 	for rows.Next() {
 		var rm m.Room
-		err := rows.Scan(&rm.ID, &rm.Name, &rm.OwnerID, &rm.CreatedAt)
+		var ru []m.RoomUser
+
+		err := rows.Scan(&rm.ID, &rm.RoomName, &rm.OwnerID, &rm.CreatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("scan room error: %w", err)
 		}
+		userIDs, err := r.rdb.SMembers(ctx, "room:"+rm.ID.String()+":users").Result()
+		if err != nil {
+			return nil, fmt.Errorf("err redis result userId in room: %w", err)
+		}
+		pipe := r.rdb.Pipeline()
+		cmds := make(map[string]*redis.MapStringStringCmd)
+
+		for _, userID := range userIDs {
+			cmds[userID] = pipe.HGetAll(ctx, "user:"+userID)
+		}
+
+		_, err = pipe.Exec(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("redis pipeline error: %w", err)
+		}
+
+		for _, cmd := range cmds {
+			userMap, err := cmd.Result()
+			if err != nil {
+				return nil, fmt.Errorf("redis cmd error: %w", err)
+			}
+
+			id, err := uuid.Parse(userMap["id"])
+			if err != nil {
+				return nil, fmt.Errorf("invalid uuid: %w", err)
+			}
+			createdAtUser, err := time.Parse(time.RFC3339Nano, userMap["created_at"])
+			if err != nil {
+				return nil, fmt.Errorf("parse user created_at error: %w", err)
+			}
+
+			ru = append(ru, m.RoomUser{
+				RoomID: rm.ID,
+				UserInfo: m.User{
+					ID:        id,
+					Username:  userMap["user_name"],
+					CreatedAt: createdAtUser,
+					Avatar:    userMap["avatar"],
+				},
+			})
+		}
+		rm.RoomUsers = ru
 		rooms = append(rooms, &rm)
 	}
 	if err = rows.Err(); err != nil {
 		return nil, fmt.Errorf("rows iteration error: %w", err)
 	}
+
 	return rooms, nil
 }
 

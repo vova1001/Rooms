@@ -16,6 +16,11 @@ type ConfigDB struct {
 	DBSSLMode string
 }
 
+type ConfigRDB struct {
+	RedisAdr  string
+	RedisPass string
+}
+
 func LoadCfgDB() (*ConfigDB, error) {
 	err := godotenv.Load(".env")
 	if err != nil {
@@ -30,4 +35,16 @@ func LoadCfgDB() (*ConfigDB, error) {
 		DBSSLMode: os.Getenv("DB_SSLMODE"),
 	}
 	return cfgBD, nil
+}
+
+func LoadCfgRDB() (*ConfigRDB, error) {
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal(".env not found")
+	}
+	cfgRBD := &ConfigRDB{
+		RedisAdr:  os.Getenv("DB_HOST"),
+		RedisPass: os.Getenv("DB_NAME"),
+	}
+	return cfgRBD, nil
 }

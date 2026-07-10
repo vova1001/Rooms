@@ -1,7 +1,7 @@
 package main
 
 import (
-	c "Signal_Server/Config"
+	c "GateWay/config"
 	"context"
 	"fmt"
 	"log"

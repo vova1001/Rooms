@@ -1,10 +1,12 @@
 package internal
 
 import (
-	m "Signal_Server/Models"
+	"time"
 
 	"context"
 	"fmt"
+
+	m "GateWay/models"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -21,8 +23,11 @@ func (r repoPart) AddUser(ctx context.Context, roomId string, user *m.User) erro
 	pipe := r.rdb.TxPipeline()
 
 	pipe.HSet(ctx, "user:"+user.Id,
-		"id:", user.Id,
+		"id", user.Id,
 		"user_name", user.UserName,
+		"avatar", user.Avatar,
+		"created_at", user.CreatedAt.Format(time.RFC3339Nano),
+		"room_id", roomId,
 	)
 
 	pipe.SAdd(ctx, "room:"+roomId+":users", user.Id)
