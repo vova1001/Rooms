@@ -43,8 +43,8 @@ func LoadCfgRDB() (*ConfigRDB, error) {
 		log.Fatal(".env not found")
 	}
 	cfgRBD := &ConfigRDB{
-		RedisAdr:  os.Getenv("DB_HOST"),
-		RedisPass: os.Getenv("DB_NAME"),
+		RedisAdr:  os.Getenv("REDIS_ADDR"),
+		RedisPass: os.Getenv("REDIS_PASS"),
 	}
 	return cfgRBD, nil
 }

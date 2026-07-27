@@ -11,6 +11,7 @@ type User struct {
 	Username  string    `json:"username"`
 	CreatedAt time.Time `json:"created_at"`
 	Avatar    string    `json:"avatar"`
+	Email     string    `json:"email"`
 }
 
 type Room struct {
@@ -48,4 +49,10 @@ type UserResponse struct {
 type RoomUsersResponse struct {
 	RoomID uuid.UUID      `json:"room_id"`
 	Users  []UserResponse `json:"users"`
+}
+
+type SendEmailCodeRequest struct {
+	Email     string `json:"email"`
+	IP        string `json:"ip"`
+	UserAgent string `json:"userAgent"`
 }

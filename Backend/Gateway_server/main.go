@@ -2,14 +2,23 @@ package main
 
 import (
 	c "GateWay/config"
+	i "GateWay/internal"
+	"GateWay/livekit"
 	"context"
-	"fmt"
 	"log"
+	"net/http"
 
+	"github.com/joho/godotenv"
 	"github.com/redis/go-redis/v9"
 )
 
 func main() {
+
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatal(".env not found")
+	}
+
 	cfg := c.LoadCfgDB()
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     cfg.RedisAdr,
@@ -20,7 +29,35 @@ func main() {
 		log.Fatalf("redis err ping%v", err)
 	}
 
-	// repo := i.NewRepoPart(rdb)
+	cfgLK := c.LoadCfgLK()
+	LKS := livekit.NewTokenService(cfgLK.LKurl, cfgLK.LKapiKey, cfgLK.LKapiSecret)
 
-	fmt.Println("Signaling_UP!")
+	log.Printf(
+		"redis addr=%q passEmpty=%v",
+		cfg.RedisAdr,
+		cfg.RedisPass == "",
+	)
+
+	log.Printf(
+		"livekit url=%q key=%q secretEmpty=%v",
+		cfgLK.LKurl,
+		cfgLK.LKapiKey,
+		cfgLK.LKapiSecret == "",
+	)
+
+	repo := i.NewRepoPart(rdb)
+	service := i.NewService(repo, LKS)
+	handler := i.NewHandler(service)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/ws", handler.ServeHTTP)
+
+	server := http.Server{
+		Addr:    ":8081",
+		Handler: mux,
+	}
+
+	log.Println("Geteway starting!!!")
+	log.Fatal(server.ListenAndServe())
+
 }

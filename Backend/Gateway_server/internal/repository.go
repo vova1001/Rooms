@@ -39,3 +39,16 @@ func (r repoPart) AddUser(ctx context.Context, roomId string, user *m.User) erro
 
 	return nil
 }
+
+func (r repoPart) DeleteUser(ctx context.Context, roomId, userId string) error {
+	pipe := r.rdb.TxPipeline()
+
+	pipe.SRem(ctx, "room:"+roomId+":users", userId)
+	pipe.Del(ctx, "user:"+userId)
+
+	if _, err := pipe.Exec(ctx); err != nil {
+		return fmt.Errorf("err delete user:%s from room:%s err:%w", userId, roomId, err)
+	}
+
+	return nil
+}

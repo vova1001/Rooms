@@ -8,7 +8,10 @@ import (
 
 	"rooms/config"
 	"rooms/db"
-	"rooms/internal"
+	han "rooms/internal/handler"
+	internal "rooms/internal/repository"
+	"rooms/internal/service"
+	mid "rooms/middleware"
 
 	"github.com/gorilla/mux"
 	"github.com/redis/go-redis/v9"
@@ -39,15 +42,15 @@ func main() {
 	})
 
 	repo := internal.NewRepo(dbConn, rdb)
-	service := internal.NewService(repo)
-	handler := internal.NewHandler(service)
+	service := service.NewService(repo)
+	handler := han.NewHandler(service)
 
 	router := mux.NewRouter()
 	handler.RegisterRoutes(router)
 
 	server := http.Server{
 		Addr:         ":8080",
-		Handler:      router,
+		Handler:      mid.CORS(router),
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}
