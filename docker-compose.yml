@@ -1,0 +1,126 @@
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: rooms-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: rooms
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - rooms-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: rooms-redis
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "redispass"]
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "redispass", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - rooms-net
+
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: rooms-livekit
+    restart: unless-stopped
+    command: ["--config", "/etc/livekit.yaml"]
+    volumes:
+      - ./Backend/livekit.docker.yaml:/etc/livekit.yaml:ro
+    ports:
+      - "7880:7880"       # HTTP/WebSocket (signaling)
+      - "7881:7881"       # TCP fallback для WebRTC
+      - "7882:7882/udp"   # UDP для медиа-трафика (RTP/ICE)
+    networks:
+      - rooms-net
+
+  api-server:
+    build:
+      context: ./Backend/Api_Server
+    container_name: rooms-api-server
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USER: postgres
+      DB_PASS: postgres
+      DB_NAME: rooms
+      DB_SSLMODE: disable
+      REDIS_ADDR: redis:6379
+      REDIS_PASS: redispass
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+    ports:
+      - "8080:8080"
+    networks:
+      - rooms-net
+
+  gateway-server:
+    build:
+      context: ./Backend/Gateway_server
+    container_name: rooms-gateway-server
+    restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
+      livekit:
+        condition: service_started
+    environment:
+      REDIS_ADDR: redis:6379
+      REDIS_PASS: redispass
+      # ВАЖНО: это URL, который сервер вернёт браузеру в токене,
+      # поэтому он должен быть доступен снаружи (не docker-хостнейм livekit).
+      # Для доступа только с этого же ПК подходит localhost, для LAN/интернета
+      # укажите реальный IP/домен через переменную LIVEKIT_PUBLIC_URL в .env
+      LIVEKIT_URL: ${LIVEKIT_PUBLIC_URL:-ws://localhost:7880}
+      LIVEKIT_API_KEY: devkey
+      LIVEKIT_API_SECRET: secret
+    ports:
+      - "8081:8081"
+    networks:
+      - rooms-net
+
+  frontend:
+    build:
+      context: ./Frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8080}
+        VITE_GATEWAY_WS: ${VITE_GATEWAY_WS:-ws://localhost:8081/ws}
+    container_name: rooms-frontend
+    restart: unless-stopped
+    depends_on:
+      - api-server
+      - gateway-server
+    ports:
+      - "5173:80"
+    networks:
+      - rooms-net
+
+networks:
+  rooms-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:
