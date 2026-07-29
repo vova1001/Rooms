@@ -1,4 +1,4 @@
-package internal
+package repository
 
 import (
 	"context"
@@ -37,11 +37,11 @@ type RoomRepository interface {
 }
 
 // CreateUser
-func (r *PartRepo) CreateUser(ctx context.Context, username string) (*m.User, error) {
+func (r *PartRepo) CreateUser(ctx context.Context, username, email, avatar string) (*m.User, error) {
 	id := uuid.New()
-	query := `INSERT INTO users (id, username, created_at) VALUES ($1, $2, NOW()) RETURNING created_at`
+	query := `INSERT INTO users (id, username, email, avatar, created_at) VALUES ($1, $2, $3, $4, NOW()) RETURNING created_at`
 	var createdAt time.Time
-	err := r.db.QueryRowContext(ctx, query, id, username).Scan(&createdAt)
+	err := r.db.QueryRowContext(ctx, query, id, username, email, avatar).Scan(&createdAt)
 	if err != nil {
 		if errors.Is(err, context.Canceled) {
 			return nil, fmt.Errorf("CreateUser cancelled by context: %w", err)
@@ -51,6 +51,8 @@ func (r *PartRepo) CreateUser(ctx context.Context, username string) (*m.User, er
 	return &m.User{
 		ID:        id,
 		Username:  username,
+		Email:     email,
+		Avatar:    avatar,
 		CreatedAt: createdAt,
 	}, nil
 }
@@ -227,4 +229,8 @@ func (r *PartRepo) EmailCheck(ctx context.Context, email string) (bool, error) {
 	}
 
 	return exists, nil
+}
+
+func (r *PartRepo) FindUserByEmail(ctx context.Context, email string) (*m.User, error) {
+	r.db.QueryRowContext(ctx, "SELECT id, username, email, ")
 }

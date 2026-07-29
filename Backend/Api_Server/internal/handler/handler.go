@@ -38,10 +38,12 @@ func (h *PartHandler) Hi(w http.ResponseWriter, r *http.Request) {
 func (h *PartHandler) InitUser(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Username string `json:"username"`
+		Email    string `json:"email"`
+		Avatar   string `json:"avatar"`
 	}
 	_ = json.NewDecoder(r.Body).Decode(&req)
 
-	user, err := h.service.CreateUser(r.Context(), req.Username)
+	user, err := h.service.CreateUser(r.Context(), req.Username, req.Email, req.Avatar)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -51,6 +53,8 @@ func (h *PartHandler) InitUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"id":         user.ID,
 		"username":   user.Username,
+		"email":      user.Email,
+		"avatar":     user.Avatar,
 		"created_at": user.CreatedAt,
 	})
 }

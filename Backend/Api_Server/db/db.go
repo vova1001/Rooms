@@ -44,6 +44,7 @@ func Migrate(db *sql.DB) error {
 	_, err = db.Exec(`CREATE TABLE users(
         id UUID PRIMARY KEY,
         username VARCHAR(50) NOT NULL,
+		email VARCHAR(254) NOT NULL,
     	avatar TEXT,
         created_at TIMESTAMPTZ DEFAULT NOW(),
 		updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

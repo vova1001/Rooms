@@ -9,8 +9,8 @@ import (
 	"rooms/config"
 	"rooms/db"
 	han "rooms/internal/handler"
-	internal "rooms/internal/repository"
-	"rooms/internal/service"
+	repo "rooms/internal/repository"
+	serv "rooms/internal/service"
 	mid "rooms/middleware"
 
 	"github.com/gorilla/mux"
@@ -41,8 +41,8 @@ func main() {
 		Password: cfgRDB.RedisPass,
 	})
 
-	repo := internal.NewRepo(dbConn, rdb)
-	service := service.NewService(repo)
+	repo := repo.NewRepo(dbConn, rdb)
+	service := serv.NewService(repo)
 	handler := han.NewHandler(service)
 
 	router := mux.NewRouter()

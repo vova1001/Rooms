@@ -4,8 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"net/mail"
-	"strings"
 
 	repo "rooms/internal/repository"
 	m "rooms/model"
@@ -21,11 +19,11 @@ func NewService(repo *repo.PartRepo) *PartService {
 	return &PartService{repo: repo}
 }
 
-func (s *PartService) CreateUser(ctx context.Context, username string) (*m.User, error) {
+func (s *PartService) CreateUser(ctx context.Context, username, email, avatar string) (*m.User, error) {
 	if username == "" {
 		username = "user_" + uuid.New().String()[:8]
 	}
-	user, err := s.repo.CreateUser(ctx, username)
+	user, err := s.repo.CreateUser(ctx, username, email, avatar)
 	if err != nil {
 		return nil, fmt.Errorf("CreateUser: %w", err)
 	}
@@ -71,24 +69,28 @@ func (s *PartService) GetRoomUsers(ctx context.Context, roomID uuid.UUID) ([]*m.
 }
 
 func (s *PartService) SendCode(ctx context.Context, sec m.SendEmailCodeRequest) error {
-	email := strings.ToLower(strings.TrimSpace(sec.Email))
+	email := Normalize(sec.Email)
 
-	if email == "" {
-		return fmt.Errorf("email empty")
+	if err := Validate(email); err != nil {
+		return fmt.Errorf("err validate email: %w", err)
 	}
 
-	if len(email) > 254 {
-		return fmt.Errorf("email too long")
-	}
-
-	address, err := mail.ParseAddress(email)
-
+	allowedIp, err := s.repo.AllowByIp(ctx, sec.IP)
 	if err != nil {
-		return fmt.Errorf("invalid email")
+		return fmt.Errorf("err limit Ip:%w", err)
 	}
 
-	if address.Address != email {
-		return fmt.Errorf("invalid email")
+	if !allowedIp {
+		return fmt.Errorf("TooManyRequestIp")
 	}
-	return nil
+
+	allowedEmail, err := s.repo.AllowByEmail(ctx, sec.IP)
+	if err != nil {
+		return fmt.Errorf("err limit Emailt:%w", err)
+	}
+
+	if !allowedEmail {
+		return fmt.Errorf("TooManyRequestEmail")
+	}
+
 }
