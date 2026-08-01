@@ -231,6 +231,6 @@ func (r *PartRepo) EmailCheck(ctx context.Context, email string) (bool, error) {
 	return exists, nil
 }
 
-func (r *PartRepo) FindUserByEmail(ctx context.Context, email string) (*m.User, error) {
-	r.db.QueryRowContext(ctx, "SELECT id, username, email, ")
-}
+// func (r *PartRepo) FindUserByEmail(ctx context.Context, email string) (*m.User, error) {
+// 	r.db.QueryRowContext(ctx, "SELECT id, username, email, ")
+// }

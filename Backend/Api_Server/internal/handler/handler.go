@@ -27,7 +27,9 @@ func (h *PartHandler) RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/rooms", h.CreateRoom).Methods("POST")
 	r.HandleFunc("/rooms", h.GetAllRooms).Methods("GET")
 	r.HandleFunc("/rooms/{id}/users", h.GetRoomUsers).Methods("GET")
-	r.HandleFunc("auth/email/send-code", h.SendCode).Methods("POST")
+	r.HandleFunc("/auth/email/send-code", h.SendCode).Methods("POST")
+	r.HandleFunc("/auth/email/verify-code", h.VerifyCode).Methods("POST")
+
 }
 
 func (h *PartHandler) Hi(w http.ResponseWriter, r *http.Request) {
@@ -171,6 +173,27 @@ func (h *PartHandler) SendCode(w http.ResponseWriter, r *http.Request) {
 		IP:        host,
 		UserAgent: userA,
 	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(sec)
+
+	if err = h.service.SendCodeFromEmail(r.Context(), sec); err != nil {
+		http.Error(w, "send code error", http.StatusBadRequest)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"message": "code sent"})
+}
+
+func (h *PartHandler) VerifyCode(w http.ResponseWriter, r *http.Request) {
+	type Request struct {
+		Email string `json:"email"`
+		Code  string `json:"code"`
+	}
+
+	var req Request
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+
 }

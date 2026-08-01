@@ -54,28 +54,37 @@ services:
   api-server:
     build:
       context: ./Backend/Api_Server
+
     container_name: rooms-api-server
     restart: unless-stopped
+
+    env_file:
+      - ./Backend/Api_Server/.env
+
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+
     environment:
       DB_HOST: postgres
-      DB_PORT: 5432
+      DB_PORT: "5432"
       DB_USER: postgres
       DB_PASS: postgres
       DB_NAME: rooms
       DB_SSLMODE: disable
+
       REDIS_ADDR: redis:6379
       REDIS_PASS: redispass
+
       CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:5173}
+
     ports:
       - "8080:8080"
+
     networks:
       - rooms-net
-
   gateway-server:
     build:
       context: ./Backend/Gateway_server
