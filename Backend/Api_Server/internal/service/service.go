@@ -130,4 +130,5 @@ func (s *PartService) VerifyCode(ctx context.Context, email, code string) error 
 	if err = s.otpRepo.DeleteOTP(ctx, email); err != nil {
 		return fmt.Errorf("err delete otp in redis:%w", err)
 	}
+	return nil
 }
