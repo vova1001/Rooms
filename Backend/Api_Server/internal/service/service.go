@@ -138,9 +138,6 @@ func (s *PartService) VerifyCode(ctx context.Context, email, code string) (*m.Ve
 	if err = s.otpRepo.DeleteOTP(ctx, email); err != nil {
 		return nil, fmt.Errorf("err delete otp in redis:%w", err)
 	}
-<<<<<<< Updated upstream
-	return nil
-=======
 
 	user, err := s.repo.FindUserByEmail(ctx, email)
 	if err != nil {
@@ -186,5 +183,4 @@ func (s *PartService) GetRegSession(ctx context.Context, token string) (string, 
 	}
 
 	return registerSession.Email, nil
->>>>>>> Stashed changes
 }
