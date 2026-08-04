@@ -1,7 +1,9 @@
 package session
 
+import "github.com/google/uuid"
+
 type AuthSession struct {
-	UserID int64 `json:"user_id"`
+	UserID uuid.UUID `json:"user_id"`
 }
 
 type RegistrationSession struct {

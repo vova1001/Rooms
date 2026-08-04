@@ -56,3 +56,8 @@ type SendEmailCodeRequest struct {
 	IP        string `json:"ip"`
 	UserAgent string `json:"userAgent"`
 }
+
+type VerifyCodeResult struct {
+	Token            string
+	RequiresRegister bool
+}

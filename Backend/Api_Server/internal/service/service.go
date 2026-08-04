@@ -4,25 +4,28 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	repo "rooms/internal/repository"
 	"rooms/internal/service/email"
 	e "rooms/internal/service/email"
 	"rooms/internal/service/otp"
+	"rooms/internal/service/session"
 	m "rooms/model"
 
 	"github.com/google/uuid"
 )
 
 type PartService struct {
-	repo    *repo.PartRepo
-	otp     *otp.Service
-	otpRepo otp.OTPRepository
-	sender  email.Sender
+	repo     *repo.PartRepo
+	otp      *otp.Service
+	otpRepo  otp.OTPRepository
+	sender   email.Sender
+	sessions *session.Service
 }
 
-func NewService(repo *repo.PartRepo, otp *otp.Service, otpRepo otp.OTPRepository, sender email.Sender) *PartService {
-	return &PartService{repo: repo, otpRepo: otpRepo, sender: sender, otp: otp}
+func NewService(repo *repo.PartRepo, otp *otp.Service, otpRepo otp.OTPRepository, sender email.Sender, sessions *session.Service) *PartService {
+	return &PartService{repo: repo, otpRepo: otpRepo, sender: sender, otp: otp, sessions: sessions}
 }
 
 func (s *PartService) CreateUser(ctx context.Context, username, email, avatar string) (*m.User, error) {
@@ -117,18 +120,71 @@ func (s *PartService) SendCodeFromEmail(ctx context.Context, sec m.SendEmailCode
 	return nil
 }
 
-func (s *PartService) VerifyCode(ctx context.Context, email, code string) error {
+func (s *PartService) VerifyCode(ctx context.Context, email, code string) (*m.VerifyCodeResult, error) {
+	const (
+		authSessionTTL         = 30 * 24 * time.Hour
+		registrationSessionTTL = 30 * time.Minute
+	)
+
 	hash, err := s.otpRepo.GetOTP(ctx, email)
 	if err != nil {
-		return fmt.Errorf("err get old hash:%w", err)
+		return nil, fmt.Errorf("err get old hash:%w", err)
 	}
 
 	if !s.otp.Verify(email, code, hash) {
-		return fmt.Errorf("err verify code:%w", err)
+		return nil, fmt.Errorf("err verify code:%w", err)
 	}
 
 	if err = s.otpRepo.DeleteOTP(ctx, email); err != nil {
-		return fmt.Errorf("err delete otp in redis:%w", err)
+		return nil, fmt.Errorf("err delete otp in redis:%w", err)
 	}
+<<<<<<< Updated upstream
 	return nil
+=======
+
+	user, err := s.repo.FindUserByEmail(ctx, email)
+	if err != nil {
+		return nil, fmt.Errorf("find user by email: %w", err)
+	}
+
+	if user != nil {
+		token, err := s.sessions.CreateAuth(ctx, user.ID, authSessionTTL)
+
+		if err != nil {
+			return nil, fmt.Errorf("create auth session in s: %w", err)
+		}
+
+		return &m.VerifyCodeResult{Token: token, RequiresRegister: false}, nil
+	}
+
+	token, err := s.sessions.CreateRegistration(ctx, email, registrationSessionTTL)
+	if err != nil {
+		return nil, fmt.Errorf("create registration session in s: %w", err)
+	}
+
+	return &m.VerifyCodeResult{Token: token, RequiresRegister: true}, nil
+}
+
+func (s *PartService) GetAuthSession(ctx context.Context, token string) (*m.User, error) {
+	authSession, err := s.sessions.GetAuth(ctx, token)
+	if err != nil {
+		return nil, fmt.Errorf("get auth session in s: %w", err)
+	}
+
+	user, err := s.repo.GetUserByID(ctx, authSession.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("get user by id: %w", err)
+	}
+
+	return user, nil
+}
+
+func (s *PartService) GetRegSession(ctx context.Context, token string) (string, error) {
+	registerSession, err := s.sessions.GetRegistration(ctx, token)
+	if err != nil {
+		return "", fmt.Errorf("get reg session in s: %w", err)
+	}
+
+	return registerSession.Email, nil
+>>>>>>> Stashed changes
 }

@@ -2,9 +2,11 @@ package internal
 
 import (
 	"encoding/json"
+	"errors"
 	"net"
 	"net/http"
 	"strings"
+	"time"
 
 	service "rooms/internal/service"
 	m "rooms/model"
@@ -29,6 +31,7 @@ func (h *PartHandler) RegisterRoutes(r *mux.Router) {
 	r.HandleFunc("/rooms/{id}/users", h.GetRoomUsers).Methods("GET")
 	r.HandleFunc("/auth/email/send-code", h.SendCode).Methods("POST")
 	r.HandleFunc("/auth/email/verify-code", h.VerifyCode).Methods("POST")
+	r.HandleFunc("/auth/session", h.GetSession).Methods("GET")
 
 }
 
@@ -195,5 +198,88 @@ func (h *PartHandler) VerifyCode(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "invalid json", http.StatusBadRequest)
 		return
 	}
+
+	res, err := h.service.VerifyCode(r.Context(), req.Email, req.Code)
+	if err != nil {
+		http.Error(w, "verify code error", http.StatusUnauthorized)
+		return
+	}
+
+	cookiName := "auth_session"
+	maxAge := int((30 * 24 * time.Hour).Seconds())
+
+	if res.RequiresRegister {
+		cookiName = "registration_session"
+		maxAge = int((30 * time.Minute).Seconds())
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     cookiName,
+		Value:    res.Token,
+		Path:     "/",
+		MaxAge:   maxAge,
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]bool{
+		"requires_register": res.RequiresRegister,
+	})
+
+}
+
+func (h *PartHandler) GetSession(w http.ResponseWriter, r *http.Request) {
+	authCook, authErr := r.Cookie("auth_session")
+
+	if authErr == nil {
+		user, err := h.service.GetAuthSession(r.Context(), authCook.Value)
+
+		if err != nil {
+			clearCookie(w, "auth_session")
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(200)
+
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"status": "authorized",
+			"user":   user,
+		})
+		return
+	}
+	if authErr != nil && !errors.Is(authErr, http.ErrNoCookie) {
+		http.Error(w, "invalid auth cookie", http.StatusBadRequest)
+		return
+	}
+	registrationCookie, registrationErr := r.Cookie("registration_session")
+
+	if registrationErr == nil {
+		email, err := h.service.GetRegSession(r.Context(), registrationCookie.Value)
+		if err != nil {
+			clearCookie(w, "registration_session")
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"status": "registration",
+			"email":  email,
+		})
+		return
+	}
+
+	if registrationErr != nil && !errors.Is(registrationErr, http.ErrNoCookie) {
+		http.Error(w, "invalid registration cookie", http.StatusBadRequest)
+		return
+	}
+
+	http.Error(w, "unauthorized", http.StatusUnauthorized)
 
 }

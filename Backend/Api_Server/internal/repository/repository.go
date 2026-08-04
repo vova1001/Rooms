@@ -59,9 +59,9 @@ func (r *PartRepo) CreateUser(ctx context.Context, username, email, avatar strin
 
 // GetUserByID
 func (r *PartRepo) GetUserByID(ctx context.Context, id uuid.UUID) (*m.User, error) {
-	query := `SELECT id, username, created_at FROM users WHERE id = $1`
+	query := `SELECT id, username, created_at, avatar, email FROM users WHERE id = $1`
 	var u m.User
-	err := r.db.QueryRowContext(ctx, query, id).Scan(&u.ID, &u.Username, &u.CreatedAt)
+	err := r.db.QueryRowContext(ctx, query, id).Scan(&u.ID, &u.Username, &u.CreatedAt, &u.Avatar, &u.Email)
 	if err != nil {
 		if errors.Is(err, context.Canceled) {
 			return nil, fmt.Errorf("GetUserByID cancelled: %w", err)
@@ -185,7 +185,7 @@ func (r *PartRepo) AddUserToRoom(ctx context.Context, roomID, userID uuid.UUID) 
 // GetUsersByRoomID
 func (r *PartRepo) GetUsersByRoomID(ctx context.Context, roomID uuid.UUID) ([]*m.User, error) {
 	query := `
-        SELECT u.id, u.username, u.created_at 
+        SELECT u.id, u.username, u.created_at, u.avatar 
         FROM users u 
         JOIN room_users ru ON u.id = ru.user_id 
         WHERE ru.room_id = $1
@@ -203,7 +203,7 @@ func (r *PartRepo) GetUsersByRoomID(ctx context.Context, roomID uuid.UUID) ([]*m
 	var users []*m.User
 	for rows.Next() {
 		var u m.User
-		err := rows.Scan(&u.ID, &u.Username, &u.CreatedAt)
+		err := rows.Scan(&u.ID, &u.Username, &u.CreatedAt, &u.Avatar)
 		if err != nil {
 			return nil, fmt.Errorf("scan user error: %w", err)
 		}
@@ -231,6 +231,20 @@ func (r *PartRepo) EmailCheck(ctx context.Context, email string) (bool, error) {
 	return exists, nil
 }
 
-// func (r *PartRepo) FindUserByEmail(ctx context.Context, email string) (*m.User, error) {
-// 	r.db.QueryRowContext(ctx, "SELECT id, username, email, ")
-// }
+func (r *PartRepo) FindUserByEmail(ctx context.Context, email string) (*m.User, error) {
+	var user m.User
+	err := r.db.QueryRowContext(ctx, "SELECT id, username, email, creat_at, avatar FROM users WHERE email =$1 LIMIT 1", email).Scan(
+		&user.ID,
+		&user.Username,
+		&user.CreatedAt,
+		&user.Avatar,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("find user by email: %w", err)
+	}
+
+	return &user, nil
+}

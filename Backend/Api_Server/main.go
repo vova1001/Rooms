@@ -13,6 +13,7 @@ import (
 	serv "rooms/internal/service"
 	e "rooms/internal/service/email"
 	"rooms/internal/service/otp"
+	s "rooms/internal/service/session"
 	mid "rooms/middleware"
 
 	"github.com/gorilla/mux"
@@ -62,6 +63,10 @@ func main() {
 	hasher := otp.NewCodeHasher(cfgOTP.Secret)
 	otpService := otp.NewService(generator, hasher)
 
+	generatorSession := s.NewGeneratorS()
+	hasherSession := s.NewHasher()
+	serviceSession := s.NewService(repository, generatorSession, hasherSession)
+
 	sender := e.NewSTMP(
 		cfgSMTP.SMTPHost,
 		cfgSMTP.SMTPFrom,
@@ -75,6 +80,7 @@ func main() {
 		otpService,
 		repository,
 		sender,
+		serviceSession,
 	)
 
 	handler := han.NewHandler(service)
