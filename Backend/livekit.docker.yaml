@@ -1,13 +1,12 @@
 port: 7880
+
 bind_addresses:
   - "0.0.0.0"
 
 rtc:
   tcp_port: 7881
   udp_port: 7882
-  # Настроено под ваш Tailscale IP, чтобы клиенты из tailnet
-  # могли подключаться к LiveKit напрямую.
-  node_ip: "100.93.229.13"
+  node_ip: "100.87.212.117"
   use_external_ip: false
 
 keys:

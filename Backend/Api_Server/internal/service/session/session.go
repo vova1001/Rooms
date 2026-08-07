@@ -82,16 +82,16 @@ func (s *Service) GetAuth(ctx context.Context, token string) (*AuthSession, erro
 	key := s.authKey(token)
 	val, err := s.repo.GetSession(ctx, key)
 	if err != nil {
-		return &AuthSession{}, fmt.Errorf("get auth session: %w", err)
+		return nil, fmt.Errorf("get auth session: %w", err)
 	}
 
-	var sessionData *AuthSession
+	var sessionData AuthSession
 
 	if err := json.Unmarshal(val, &sessionData); err != nil {
-		return &AuthSession{}, fmt.Errorf("unmarshal auth session: %w", err)
+		return nil, fmt.Errorf("unmarshal auth session: %w", err)
 	}
 
-	return sessionData, nil
+	return &sessionData, nil
 }
 
 func (s *Service) GetRegistration(ctx context.Context, token string) (*RegistrationSession, error) {
@@ -99,13 +99,13 @@ func (s *Service) GetRegistration(ctx context.Context, token string) (*Registrat
 	key := s.registrationKey(token)
 	val, err := s.repo.GetSession(ctx, key)
 	if err != nil {
-		return &RegistrationSession{}, fmt.Errorf("get reg session: %w", err)
+		return nil, fmt.Errorf("get reg session: %w", err)
 	}
 
 	var sessionData RegistrationSession
 
 	if err := json.Unmarshal(val, &sessionData); err != nil {
-		return &RegistrationSession{}, fmt.Errorf("unmarshal reg session: %w", err)
+		return nil, fmt.Errorf("unmarshal reg session: %w", err)
 	}
 
 	return &sessionData, nil

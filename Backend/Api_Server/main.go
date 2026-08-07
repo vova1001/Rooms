@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"rooms/config"
+	cors "rooms/cors"
 	"rooms/db"
 	han "rooms/internal/handler"
 	repo "rooms/internal/repository"
@@ -14,9 +15,7 @@ import (
 	e "rooms/internal/service/email"
 	"rooms/internal/service/otp"
 	s "rooms/internal/service/session"
-	mid "rooms/middleware"
 
-	"github.com/gorilla/mux"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -85,12 +84,12 @@ func main() {
 
 	handler := han.NewHandler(service)
 
-	router := mux.NewRouter()
+	router := http.NewServeMux()
 	handler.RegisterRoutes(router)
 
 	server := http.Server{
 		Addr:         ":8080",
-		Handler:      mid.CORS(router),
+		Handler:      cors.CORS(router),
 		ReadTimeout:  30 * time.Second,
 		WriteTimeout: 30 * time.Second,
 	}

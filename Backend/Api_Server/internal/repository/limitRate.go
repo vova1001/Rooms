@@ -36,7 +36,7 @@ func (r *PartRepo) AllowByIp(ctx context.Context, rawIp string) (bool, error) {
 	}
 	key := buildIPRateLimitKey(ip)
 
-	count, err := incrRateLimitScript.Run(ctx, r.rdb, []string{key}, IpKD).Int64()
+	count, err := incrRateLimitScript.Run(ctx, r.rdb, []string{key}, IpKD.Milliseconds()).Int64()
 
 	if err != nil {
 		return false, fmt.Errorf("execute IP rate limit script: %w", err)
@@ -49,7 +49,7 @@ func (r *PartRepo) AllowByIp(ctx context.Context, rawIp string) (bool, error) {
 func (r *PartRepo) AllowByEmail(ctx context.Context, email string) (bool, error) {
 	key := buildEmailRateLimitKey(email)
 
-	count, err := incrRateLimitScript.Run(ctx, r.rdb, []string{key}, EmailKD).Int64()
+	count, err := incrRateLimitScript.Run(ctx, r.rdb, []string{key}, EmailKD.Milliseconds()).Int64()
 	if err != nil {
 		return false, fmt.Errorf("execute Email rate limit script: %w", err)
 	}

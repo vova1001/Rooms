@@ -3,6 +3,7 @@ package internal
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net"
 	"net/http"
 	"strings"
@@ -23,15 +24,16 @@ func NewHandler(service *service.PartService) *PartHandler {
 	return &PartHandler{service: service}
 }
 
-func (h *PartHandler) RegisterRoutes(r *mux.Router) {
-	r.HandleFunc("/hi", h.Hi).Methods("GET")
-	r.HandleFunc("/user/init", h.InitUser).Methods("POST")
-	r.HandleFunc("/rooms", h.CreateRoom).Methods("POST")
-	r.HandleFunc("/rooms", h.GetAllRooms).Methods("GET")
-	r.HandleFunc("/rooms/{id}/users", h.GetRoomUsers).Methods("GET")
-	r.HandleFunc("/auth/email/send-code", h.SendCode).Methods("POST")
-	r.HandleFunc("/auth/email/verify-code", h.VerifyCode).Methods("POST")
-	r.HandleFunc("/auth/session", h.GetSession).Methods("GET")
+func (h *PartHandler) RegisterRoutes(r *http.ServeMux) {
+	r.Handle("GET /rooms", h.MiddlAuth(http.HandlerFunc(h.GetAllRooms)))
+	r.Handle("POST /create-rooms", h.MiddlAuth(http.HandlerFunc(h.CreateRoom)))
+	r.Handle("GET /rooms/{id}/users", h.MiddlAuth(http.HandlerFunc(h.GetRoomUsers)))
+	r.HandleFunc("POST /auth/email/send-code", h.SendCode)
+	r.HandleFunc("POST /auth/email/verify-code", h.VerifyCode)
+	r.HandleFunc("GET /auth/session", h.GetSession)
+	r.HandleFunc("POST /create-user", h.CreateUser)
+	r.HandleFunc("GET /avatars", h.GetAvatars)
+	r.HandleFunc("GET /hi", h.Hi)
 
 }
 
@@ -40,28 +42,19 @@ func (h *PartHandler) Hi(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode("HI NIGGERS!")
 }
 
-func (h *PartHandler) InitUser(w http.ResponseWriter, r *http.Request) {
-	var req struct {
-		Username string `json:"username"`
-		Email    string `json:"email"`
-		Avatar   string `json:"avatar"`
-	}
-	_ = json.NewDecoder(r.Body).Decode(&req)
-
-	user, err := h.service.CreateUser(r.Context(), req.Username, req.Email, req.Avatar)
+func (h *PartHandler) GetAvatars(w http.ResponseWriter, r *http.Request) {
+	avatarsInfo, err := h.service.GetAvatars(r.Context())
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), 500)
 		return
 	}
+
 	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]interface{}{
-		"id":         user.ID,
-		"username":   user.Username,
-		"email":      user.Email,
-		"avatar":     user.Avatar,
-		"created_at": user.CreatedAt,
-	})
+	if err := json.NewEncoder(w).Encode(avatarsInfo); err != nil {
+		http.Error(w, err.Error(), 500)
+		return
+	}
+
 }
 
 func (h *PartHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
@@ -178,7 +171,13 @@ func (h *PartHandler) SendCode(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err = h.service.SendCodeFromEmail(r.Context(), sec); err != nil {
-		http.Error(w, "send code error", http.StatusBadRequest)
+		log.Printf("SendCodeFromEmail error: %v", err)
+
+		http.Error(
+			w,
+			"send code error: "+err.Error(),
+			http.StatusBadRequest,
+		)
 		return
 	}
 
@@ -201,7 +200,8 @@ func (h *PartHandler) VerifyCode(w http.ResponseWriter, r *http.Request) {
 
 	res, err := h.service.VerifyCode(r.Context(), req.Email, req.Code)
 	if err != nil {
-		http.Error(w, "verify code error", http.StatusUnauthorized)
+		log.Printf("verify code error: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -282,4 +282,67 @@ func (h *PartHandler) GetSession(w http.ResponseWriter, r *http.Request) {
 
 	http.Error(w, "unauthorized", http.StatusUnauthorized)
 
+}
+
+func (h *PartHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Username string `json:"username"`
+		Avatar   string `json:"avatar"`
+	}
+
+	regCookie, err := r.Cookie("registration_session")
+	if err != nil {
+		http.Error(w, "registration session required", http.StatusUnauthorized)
+		return
+	}
+
+	if err = json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+
+	email, err := h.service.GetRegSession(r.Context(), regCookie.Value)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	user, err := h.service.CreateUser(r.Context(), req.Username, email, req.Avatar)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	token, err := h.service.CreateAuthSession(r.Context(), user.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	if err := h.service.DeleteRegSession(r.Context(), regCookie.Value); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	clearCookie(w, "registration_session")
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "auth_session",
+		Value:    token,
+		Path:     "/",
+		MaxAge:   int((30 * 24 * time.Hour).Seconds()),
+		HttpOnly: true,
+		Secure:   false,
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"id":         user.ID,
+		"username":   user.Username,
+		"email":      user.Email,
+		"avatar":     user.Avatar,
+		"created_at": user.CreatedAt,
+	})
 }

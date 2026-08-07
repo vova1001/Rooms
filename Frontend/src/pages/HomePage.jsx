@@ -1,4 +1,4 @@
-import { LogOut, Plus, RefreshCw, Search } from 'lucide-react';
+import { Plus, RefreshCw, Search } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createRoom, getRooms } from '../api/http';
@@ -6,10 +6,10 @@ import Avatar from '../components/Avatar';
 import CreateRoomPanel from '../components/CreateRoomPanel';
 import Logo from '../components/Logo';
 import RoomCard from '../components/RoomCard';
-import { clearUser, getStoredUser } from '../utils/session';
+import { getStoredUser } from '../utils/session';
 import { normalizeRoom } from '../utils/rooms';
 
-export default function HomePage() {
+export default function HomePage({ refreshSession }) {
   const navigate = useNavigate();
   const user = getStoredUser();
   const [rooms, setRooms] = useState([]);
@@ -19,6 +19,15 @@ export default function HomePage() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [error, setError] = useState('');
 
+  async function handleUnauthorized(err) {
+    if (err?.status !== 401) return false;
+    const next = await refreshSession();
+    if (next.status !== 'authorized') {
+      navigate(next.status === 'registration' ? '/complete-profile' : '/welcome', { replace: true });
+    }
+    return true;
+  }
+
   async function loadRooms() {
     setLoading(true);
     setError('');
@@ -26,7 +35,7 @@ export default function HomePage() {
       const data = await getRooms();
       setRooms((Array.isArray(data) ? data : []).map(normalizeRoom));
     } catch (err) {
-      setError(err.message);
+      if (!(await handleUnauthorized(err))) setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -51,22 +60,17 @@ export default function HomePage() {
     setCreating(true);
     setError('');
     try {
-      const created = normalizeRoom(await createRoom(name, user.id));
+      const created = normalizeRoom(await createRoom(name, user?.id));
       setRooms((current) => [created, ...current.filter((room) => room.id !== created.id)]);
       setPanelOpen(false);
       joinRoom(created);
       return true;
     } catch (err) {
-      setError(err.message);
+      if (!(await handleUnauthorized(err))) setError(err.message);
       return false;
     } finally {
       setCreating(false);
     }
-  }
-
-  function logout() {
-    clearUser();
-    navigate('/welcome', { replace: true });
   }
 
   return (
@@ -75,10 +79,10 @@ export default function HomePage() {
         <Logo />
         <div className="sidebar-spacer" />
         <div className="profile-block">
-          <Avatar name={user.username} src={user.avatar} />
-          <div><strong>{user.username}</strong><span>В сети</span></div>
+          <Avatar name={user?.username} src={user?.avatar} />
+          <div><strong>{user?.username || 'Пользователь'}</strong><span>В сети</span></div>
         </div>
-        <button className="sidebar-action" onClick={logout} type="button"><LogOut size={17} /> Выйти</button>
+        <div className="session-note">Вход защищён серверной сессией</div>
       </aside>
 
       <main className="home-main">

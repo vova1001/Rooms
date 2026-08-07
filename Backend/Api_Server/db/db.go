@@ -76,5 +76,16 @@ func Migrate(db *sql.DB) error {
 	}
 	log.Println("✓ Table 'room_users' created")
 
+	_, err = db.Exec(`
+		CREATE TABLE IF NOT EXISTS avatars (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			url TEXT NOT NULL UNIQUE,
+			is_active BOOLEAN NOT NULL DEFAULT TRUE)
+		`)
+	if err != nil {
+		return fmt.Errorf("create avatars failed: %w", err)
+	}
+	log.Println("✓ Table 'avatars' created")
+
 	return nil
 }

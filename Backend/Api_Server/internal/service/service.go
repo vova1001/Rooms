@@ -184,3 +184,25 @@ func (s *PartService) GetRegSession(ctx context.Context, token string) (string, 
 
 	return registerSession.Email, nil
 }
+
+func (s *PartService) CreateAuthSession(ctx context.Context, userId uuid.UUID) (string, error) {
+	token, err := s.sessions.CreateAuth(ctx, userId, 30*24*time.Hour)
+	if err != nil {
+		return "", fmt.Errorf("err create auth session in s: %w", err)
+	}
+
+	return token, nil
+}
+
+func (s *PartService) DeleteRegSession(ctx context.Context, token string) error {
+	return s.sessions.DeleteRegistration(ctx, token)
+}
+
+func (s *PartService) GetAvatars(ctx context.Context) ([]repo.Avatars, error) {
+	avatars, err := s.repo.GetAvatars(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return avatars, nil
+}

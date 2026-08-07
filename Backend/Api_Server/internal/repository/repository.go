@@ -67,7 +67,7 @@ func (r *PartRepo) GetUserByID(ctx context.Context, id uuid.UUID) (*m.User, erro
 			return nil, fmt.Errorf("GetUserByID cancelled: %w", err)
 		}
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, nil
+			return nil, fmt.Errorf("user not found: %s", id)
 		}
 		return nil, fmt.Errorf("failed to get user by id %s: %w", id, err)
 	}
@@ -233,7 +233,7 @@ func (r *PartRepo) EmailCheck(ctx context.Context, email string) (bool, error) {
 
 func (r *PartRepo) FindUserByEmail(ctx context.Context, email string) (*m.User, error) {
 	var user m.User
-	err := r.db.QueryRowContext(ctx, "SELECT id, username, email, creat_at, avatar FROM users WHERE email =$1 LIMIT 1", email).Scan(
+	err := r.db.QueryRowContext(ctx, "SELECT id, username, email, created_at, avatar FROM users WHERE email =$1 LIMIT 1", email).Scan(
 		&user.ID,
 		&user.Username,
 		&user.CreatedAt,
@@ -247,4 +247,32 @@ func (r *PartRepo) FindUserByEmail(ctx context.Context, email string) (*m.User, 
 	}
 
 	return &user, nil
+}
+
+func (r *PartRepo) GetAvatars(ctx context.Context) ([]Avatars, error) {
+
+	avatars := make([]Avatars, 0)
+
+	query := "SELECT id, url FROM avatars WHERE is_active = $1"
+
+	rows, err := r.db.QueryContext(ctx, query, 1)
+	if err != nil {
+		return nil, fmt.Errorf("err create rows: %w", err)
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var avatar Avatars
+		if err := rows.Scan(&avatar.id, &avatar.url); err != nil {
+			return nil, fmt.Errorf("err scan avatar: %w", err)
+		}
+		avatars = append(avatars, avatar)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("rows iteration: %w", err)
+	}
+
+	return avatars, nil
 }
