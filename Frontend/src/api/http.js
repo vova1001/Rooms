@@ -69,6 +69,13 @@ export function getAvatars() {
   return request('/avatars');
 }
 
+export function unlockAvatars(code) {
+  return request('/avatars/unlock', {
+    method: 'POST',
+    body: JSON.stringify({ code }),
+  });
+}
+
 export function completeProfile(username, avatar) {
   return request('/create-user', {
     method: 'POST',

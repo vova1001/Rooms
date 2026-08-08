@@ -264,7 +264,7 @@ func (r *PartRepo) GetAvatars(ctx context.Context) ([]Avatars, error) {
 
 	for rows.Next() {
 		var avatar Avatars
-		if err := rows.Scan(&avatar.id, &avatar.url); err != nil {
+		if err := rows.Scan(&avatar.ID, &avatar.URL); err != nil {
 			return nil, fmt.Errorf("err scan avatar: %w", err)
 		}
 		avatars = append(avatars, avatar)

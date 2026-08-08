@@ -28,6 +28,7 @@ func (h *PartHandler) RegisterRoutes(r *http.ServeMux) {
 	r.Handle("GET /rooms", h.MiddlAuth(http.HandlerFunc(h.GetAllRooms)))
 	r.Handle("POST /create-rooms", h.MiddlAuth(http.HandlerFunc(h.CreateRoom)))
 	r.Handle("GET /rooms/{id}/users", h.MiddlAuth(http.HandlerFunc(h.GetRoomUsers)))
+	r.HandleFunc("POST /avatars/unlock", h.UnlockAvatars)
 	r.HandleFunc("POST /auth/email/send-code", h.SendCode)
 	r.HandleFunc("POST /auth/email/verify-code", h.VerifyCode)
 	r.HandleFunc("GET /auth/session", h.GetSession)
@@ -35,6 +36,35 @@ func (h *PartHandler) RegisterRoutes(r *http.ServeMux) {
 	r.HandleFunc("GET /avatars", h.GetAvatars)
 	r.HandleFunc("GET /hi", h.Hi)
 
+}
+
+func (h *PartHandler) UnlockAvatars(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Code string `json:"code"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+
+	const secretCode = "1122334455"
+
+	if req.Code != secretCode {
+		http.Error(w, "invalid code", http.StatusUnauthorized)
+		return
+	}
+
+	avatars := []string{
+		"/static/s1.png",
+		"/static/s2.png",
+		"/static/s3.png",
+		"/static/s4.png",
+		"/static/s5.png",
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(avatars)
 }
 
 func (h *PartHandler) Hi(w http.ResponseWriter, r *http.Request) {

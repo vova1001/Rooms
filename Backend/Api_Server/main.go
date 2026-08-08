@@ -87,6 +87,10 @@ func main() {
 	router := http.NewServeMux()
 	handler.RegisterRoutes(router)
 
+	fileServer := http.FileServer(http.Dir("./static"))
+
+	router.Handle("/static/", http.StripPrefix("/static/", fileServer))
+
 	server := http.Server{
 		Addr:         ":8080",
 		Handler:      cors.CORS(router),

@@ -866,3 +866,314 @@ label { color: #c3c9d3; font-size: 13px; font-weight: 700; }
   .sidebar { padding: 16px 20px; }
   .sidebar .logo span:last-child { display: none; }
 }
+
+/* --- Profile avatar picker refinements --- */
+.avatar-picker {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  max-height: 250px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 4px 9px 4px 2px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(166, 255, 98, .48) rgba(255, 255, 255, .045);
+  overscroll-behavior: contain;
+}
+
+.avatar-picker::-webkit-scrollbar {
+  width: 7px;
+}
+
+.avatar-picker::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, .035);
+  border-radius: 999px;
+  margin: 5px 0;
+}
+
+.avatar-picker::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(166,255,98,.78), rgba(119,214,63,.52));
+  border-radius: 999px;
+  border: 2px solid #11151b;
+}
+
+.avatar-picker::-webkit-scrollbar-thumb:hover {
+  background: rgba(166, 255, 98, .9);
+}
+
+.avatar-option {
+  aspect-ratio: 1;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  background: #07090c;
+  overflow: hidden;
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+  display: grid;
+  place-items: center;
+}
+
+.avatar-option:hover {
+  transform: translateY(-2px) scale(1.025);
+  border-color: rgba(166,255,98,.42);
+}
+
+.avatar-option.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(166,255,98,.11), 0 8px 24px rgba(0,0,0,.25);
+}
+
+.avatar-option-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  display: block;
+  background: #050608;
+}
+
+.avatar-option img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  border-radius: 50%;
+  display: block;
+}
+
+.secret-unlocked-label {
+  color: var(--accent) !important;
+}
+
+.secret-avatar-control {
+  position: fixed;
+  right: max(18px, env(safe-area-inset-right));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  z-index: 120;
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.secret-avatar-trigger,
+.secret-avatar-popover {
+  pointer-events: auto;
+}
+
+.secret-avatar-trigger {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  border: 1px solid rgba(166,255,98,.28);
+  background: rgba(11,14,18,.96);
+  color: var(--accent);
+  font-size: 21px;
+  font-weight: 850;
+  line-height: 1;
+  display: grid;
+  place-items: center;
+  box-shadow: 0 14px 38px rgba(0,0,0,.38), inset 0 0 0 1px rgba(255,255,255,.018);
+  backdrop-filter: blur(14px);
+  transition: .18s ease;
+}
+
+.secret-avatar-trigger:hover {
+  transform: translateY(-2px);
+  background: rgba(19,26,20,.98);
+  border-color: rgba(166,255,98,.65);
+  box-shadow: 0 16px 42px rgba(0,0,0,.48), 0 0 0 3px rgba(166,255,98,.07);
+}
+
+.secret-avatar-popover {
+  width: min(310px, calc(100vw - 36px));
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: rgba(14,17,22,.97);
+  box-shadow: 0 22px 70px rgba(0,0,0,.52);
+  backdrop-filter: blur(18px);
+  display: grid;
+  gap: 10px;
+  position: relative;
+  animation: secretPopoverIn .18s ease both;
+}
+
+@keyframes secretPopoverIn {
+  from { opacity: 0; transform: translateY(8px) scale(.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.secret-popover-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  color: var(--accent);
+  background: rgba(166,255,98,.08);
+  border: 1px solid rgba(166,255,98,.14);
+}
+
+.secret-avatar-popover strong {
+  font-size: 16px;
+}
+
+.secret-avatar-popover > span {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.secret-avatar-popover input {
+  width: 100%;
+  margin: 2px 0 0;
+}
+
+.secret-popover-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 9px;
+  color: var(--muted);
+  background: transparent;
+  display: grid;
+  place-items: center;
+}
+
+.secret-popover-close:hover {
+  color: var(--text);
+  background: rgba(255,255,255,.05);
+}
+
+.secret-unlock-submit {
+  min-height: 40px;
+  border: 0;
+  border-radius: 11px;
+  background: var(--accent);
+  color: #071006;
+  font-weight: 800;
+}
+
+.secret-unlock-submit:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+.secret-unlock-error {
+  color: #ff8b8b;
+  font-size: 12px;
+}
+
+@media (max-width: 680px) {
+  .avatar-picker {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    max-height: 280px;
+  }
+
+  .secret-avatar-control {
+    right: 12px;
+    bottom: 12px;
+  }
+}
+
+
+/* --- Avatar picker: larger, spaced, clean final layout --- */
+.profile-card {
+  max-width: 650px;
+}
+
+.profile-setup-content {
+  grid-template-columns: minmax(0, .9fr) minmax(560px, 1.1fr);
+  gap: clamp(48px, 7vw, 110px);
+}
+
+.avatar-picker {
+  grid-template-columns: repeat(4, 96px);
+  justify-content: center;
+  align-content: start;
+  gap: 18px;
+  max-height: 370px;
+  padding: 10px 14px 10px 8px;
+}
+
+.avatar-option {
+  width: 96px;
+  height: 96px;
+  aspect-ratio: auto;
+  padding: 4px;
+  flex: none;
+  border-radius: 50%;
+  background: #030405;
+}
+
+.avatar-option-image,
+.avatar-option img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+
+.avatar-option img {
+  object-fit: cover;
+  object-position: center;
+}
+
+.avatar-option:hover {
+  transform: translateY(-3px) scale(1.035);
+}
+
+.avatar-picker::-webkit-scrollbar {
+  width: 6px;
+}
+
+.avatar-picker::-webkit-scrollbar-track {
+  background: rgba(255,255,255,.025);
+  border-radius: 999px;
+}
+
+.avatar-picker::-webkit-scrollbar-thumb {
+  background: rgba(166,255,98,.55);
+  border: 0;
+  border-radius: 999px;
+}
+
+@media (max-width: 1050px) {
+  .profile-setup-content {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-card {
+    max-width: 650px;
+    width: 100%;
+    justify-self: center;
+  }
+}
+
+@media (max-width: 620px) {
+  .avatar-picker {
+    grid-template-columns: repeat(3, 88px);
+    gap: 14px;
+    max-height: 390px;
+    padding-right: 10px;
+  }
+
+  .avatar-option {
+    width: 88px;
+    height: 88px;
+  }
+}
+
+@media (max-width: 390px) {
+  .avatar-picker {
+    grid-template-columns: repeat(3, 78px);
+    gap: 11px;
+  }
+
+  .avatar-option {
+    width: 78px;
+    height: 78px;
+  }
+}
