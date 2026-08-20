@@ -1,0 +1,13 @@
+port: 7880
+
+bind_addresses:
+  - "0.0.0.0"
+
+rtc:
+  tcp_port: 7881
+  udp_port: 7882
+  node_ip: "108.165.173.69"
+  use_external_ip: false
+
+keys:
+  hushh_371d5cc25ad3172b: IVxqEc3KUtlH3XiK4TqW3KlyNpgK11qJHQfQkgHG4gw

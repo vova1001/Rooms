@@ -1,0 +1,143 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: rooms-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [rooms-net]
+
+  redis:
+    image: redis:7-alpine
+    container_name: rooms-redis
+    restart: unless-stopped
+    command: ["redis-server", "--requirepass", "${REDIS_PASSWORD}", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a '$${REDIS_PASSWORD}' ping | grep PONG"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    networks: [rooms-net]
+
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: rooms-livekit
+    restart: unless-stopped
+    command: ["--config", "/etc/livekit.yaml"]
+    volumes:
+      - ./Backend/livekit.docker.yaml:/etc/livekit.yaml:ro
+    ports:
+      - "7881:7881/tcp"
+      - "7882:7882/udp"
+    networks: [rooms-net]
+
+  api-server:
+    build:
+      context: ./Backend
+      dockerfile: api_server/Dockerfile
+    container_name: rooms-api-server
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: ${POSTGRES_USER}
+      DB_PASS: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+      DB_SSLMODE: disable
+      REDIS_ADDR: redis:6379
+      REDIS_PASS: ${REDIS_PASSWORD}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USERNAME: ${SMTP_USERNAME}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_FROM: ${SMTP_FROM}
+      OTP_SECRET: ${OTP_SECRET}
+      CORS_ORIGIN: ${CORS_ORIGIN}
+    networks: [rooms-net]
+
+  gateway-server:
+    build:
+      context: ./Backend
+      dockerfile: gateway_server/Dockerfile
+    container_name: rooms-gateway-server
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      livekit:
+        condition: service_started
+    environment:
+      DB_HOST: postgres
+      DB_PORT: "5432"
+      DB_USER: ${POSTGRES_USER}
+      DB_PASS: ${POSTGRES_PASSWORD}
+      DB_NAME: ${POSTGRES_DB}
+      DB_SSLMODE: disable
+      REDIS_ADDR: redis:6379
+      REDIS_PASS: ${REDIS_PASSWORD}
+      LIVEKIT_URL: ${LIVEKIT_PUBLIC_URL}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
+    networks: [rooms-net]
+
+  frontend:
+    build:
+      context: ./Frontend
+      args:
+        VITE_API_URL: ${VITE_API_URL}
+        VITE_GATEWAY_WS: ${VITE_GATEWAY_WS}
+    container_name: rooms-frontend
+    restart: unless-stopped
+    depends_on:
+      - api-server
+      - gateway-server
+    networks: [rooms-net]
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: rooms-caddy
+    restart: unless-stopped
+    depends_on:
+      - frontend
+      - api-server
+      - gateway-server
+      - livekit
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    networks: [rooms-net]
+
+networks:
+  rooms-net:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:
+  caddy-data:
+  caddy-config:

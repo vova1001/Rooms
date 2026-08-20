@@ -1,0 +1,15 @@
+hushh.site, www.hushh.site {
+    reverse_proxy frontend:80
+}
+
+api.hushh.site {
+    reverse_proxy api-server:8080
+}
+
+ws.hushh.site {
+    reverse_proxy gateway-server:8081
+}
+
+livekit.hushh.site {
+    reverse_proxy livekit:7880
+}

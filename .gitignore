@@ -1,0 +1,32 @@
+# Secrets / environment
+.env
+.env.*
+!.env.example
+
+# Go
+*.exe
+*.test
+*.out
+bin/
+
+# Frontend
+Frontend/node_modules/
+Frontend/dist/
+node_modules/
+dist/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary / archives
+*.zip
+*.rar
+*.7z
