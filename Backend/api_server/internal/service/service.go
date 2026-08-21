@@ -127,12 +127,13 @@ func (s *PartService) VerifyCode(ctx context.Context, email, code string) (*m.Ve
 		registrationSessionTTL = 30 * time.Minute
 	)
 
-	hash, err := s.otpRepo.GetOTP(ctx, email)
+	normEmail := e.Normalize(email)
+
+	hash, err := s.otpRepo.GetOTP(ctx, normEmail)
+
 	if err != nil {
 		return nil, fmt.Errorf("err get old hash:%w", err)
 	}
-
-	normEmail := e.Normalize(email)
 
 	if !s.otp.Verify(normEmail, code, hash) {
 		return nil, fmt.Errorf("err verify code:%w", err)
