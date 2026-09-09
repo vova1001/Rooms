@@ -1,4 +1,4 @@
-package session
+package getauthsession
 
 import (
 	"crypto/sha256"

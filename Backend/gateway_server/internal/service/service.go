@@ -1,6 +1,8 @@
-package internal
+package service
 
 import (
+	r "backend/gateway_server/internal/repository"
+	rm "backend/gateway_server/internal/repository/message"
 	"backend/gateway_server/livekit"
 	m "backend/gateway_server/models"
 	"time"
@@ -14,8 +16,9 @@ type UserRepo interface {
 }
 
 type Service struct {
-	repo *repoPart
-	LKS  *livekit.TokenService
+	repo    *r.RepoPart
+	repoMsg *rm.Repository
+	LKS     *livekit.TokenService
 }
 
 type JoinResult struct {
@@ -23,7 +26,7 @@ type JoinResult struct {
 	ConnectionData *livekit.ConnectionData `json:"livekit"`
 }
 
-func NewService(repo *repoPart, LKS *livekit.TokenService) *Service {
+func NewService(repo *r.RepoPart, LKS *livekit.TokenService) *Service {
 	return &Service{
 		repo: repo,
 		LKS:  LKS,

@@ -1,4 +1,4 @@
-package internal
+package repository
 
 import (
 	"database/sql"
@@ -9,19 +9,22 @@ import (
 
 	m "backend/gateway_server/models"
 
+	rm "backend/gateway_server/internal/repository/message"
+
 	"github.com/redis/go-redis/v9"
 )
 
-type repoPart struct {
-	rdb *redis.Client
-	db  *sql.DB
+type RepoPart struct {
+	rdb     *redis.Client
+	db      *sql.DB
+	RepoMsg *rm.Repository
 }
 
-func NewRepoPart(rdb *redis.Client, db *sql.DB) *repoPart {
-	return &repoPart{rdb: rdb, db: db}
+func NewRepoPart(rdb *redis.Client, db *sql.DB) *RepoPart {
+	return &RepoPart{rdb: rdb, db: db, RepoMsg: rm.New(db)}
 }
 
-func (r repoPart) AddUser(ctx context.Context, roomId string, user *m.User) error {
+func (r RepoPart) AddUser(ctx context.Context, roomId string, user *m.User) error {
 	pipe := r.rdb.TxPipeline()
 
 	pipe.HSet(ctx, "user:"+user.Id,
@@ -42,7 +45,7 @@ func (r repoPart) AddUser(ctx context.Context, roomId string, user *m.User) erro
 	return nil
 }
 
-func (r repoPart) DeleteUser(ctx context.Context, roomId, userId string) error {
+func (r RepoPart) DeleteUser(ctx context.Context, roomId, userId string) error {
 	pipe := r.rdb.TxPipeline()
 
 	pipe.SRem(ctx, "room:"+roomId+":users", userId)
@@ -53,4 +56,13 @@ func (r repoPart) DeleteUser(ctx context.Context, roomId, userId string) error {
 	}
 
 	return nil
+}
+
+func (r RepoPart) GetSession(ctx context.Context, key string) ([]byte, error) {
+	val, err := r.rdb.Get(ctx, key).Bytes()
+	if err != nil {
+		return nil, fmt.Errorf("get session from redis: %w", err)
+	}
+
+	return val, nil
 }

@@ -8,7 +8,7 @@ import (
 func CORS(next http.Handler) http.Handler {
 	origin := os.Getenv("CORS_ORIGIN")
 	if origin == "" {
-		origin = "https://hushh.site"
+		origin = "http://100.87.212.117:5173"
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

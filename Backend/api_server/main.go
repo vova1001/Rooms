@@ -15,6 +15,8 @@ import (
 	e "backend/api_server/internal/service/email"
 	"backend/api_server/internal/service/otp"
 	s "backend/api_server/internal/service/session"
+	sharedGetAuthS "backend/shared/getAuthSession"
+	sharedRepoUsers "backend/shared/users"
 
 	configDB "backend/shared/configDB"
 	d "backend/shared/postgre"
@@ -66,8 +68,10 @@ func main() {
 	otpService := otp.NewService(generator, hasher)
 
 	generatorSession := s.NewGeneratorS()
-	hasherSession := s.NewHasher()
+	hasherSession := sharedGetAuthS.NewHasher()
 	serviceSession := s.NewService(repository, generatorSession, hasherSession)
+	sharedAuthReader := sharedGetAuthS.NewReader(repository, hasherSession)
+	sharedRepoUsers := sharedRepoUsers.NewRepository(dbConn)
 
 	sender := e.NewSTMP(
 		cfgSMTP.SMTPHost,
@@ -83,6 +87,8 @@ func main() {
 		repository,
 		sender,
 		serviceSession,
+		sharedAuthReader,
+		sharedRepoUsers,
 	)
 
 	handler := han.NewHandler(service)

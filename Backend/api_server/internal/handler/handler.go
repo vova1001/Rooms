@@ -249,7 +249,7 @@ func (h *PartHandler) VerifyCode(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		MaxAge:   maxAge,
 		HttpOnly: true,
-		Secure:   true,
+		Secure:   false,
 		SameSite: http.SameSiteLaxMode,
 	})
 
@@ -362,7 +362,7 @@ func (h *PartHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		MaxAge:   int((30 * 24 * time.Hour).Seconds()),
 		HttpOnly: true,
-		Secure:   true,
+		Secure:   false,
 		SameSite: http.SameSiteLaxMode,
 	})
 

@@ -87,8 +87,8 @@ func Migrate(db *sql.DB) error {
 			room_id UUID NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
 			user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 			msg TEXT NOT NULL,
-			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			created_at TIMESTAMPTZ NOT NULL,
+			updated_at TIMESTAMPTZ,
 			deleted_at TIMESTAMPTZ
 		)
 	`)
