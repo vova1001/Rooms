@@ -12,24 +12,20 @@ import (
 	"backend/api_server/internal/service/otp"
 	"backend/api_server/internal/service/session"
 	m "backend/api_server/model"
-	getAuthS "backend/shared/getAuthSession"
-	repoUser "backend/shared/users"
 
 	"github.com/google/uuid"
 )
 
 type PartService struct {
-	repo            *repo.PartRepo
-	otp             *otp.Service
-	otpRepo         otp.OTPRepository
-	sender          email.Sender
-	sessions        *session.Service
-	sharedAuthReder *getAuthS.Reader
-	sharedRepoUser  *repoUser.RepositoryUser
+	repo     *repo.PartRepo
+	otp      *otp.Service
+	otpRepo  otp.OTPRepository
+	sender   email.Sender
+	sessions *session.Service
 }
 
-func NewService(repo *repo.PartRepo, otp *otp.Service, otpRepo otp.OTPRepository, sender email.Sender, sessions *session.Service, sharedAuthReder *getAuthS.Reader, sharedRepoUser *repoUser.RepositoryUser) *PartService {
-	return &PartService{repo: repo, otpRepo: otpRepo, sender: sender, otp: otp, sessions: sessions, sharedAuthReder: sharedAuthReder, sharedRepoUser: sharedRepoUser}
+func NewService(repo *repo.PartRepo, otp *otp.Service, otpRepo otp.OTPRepository, sender email.Sender, sessions *session.Service) *PartService {
+	return &PartService{repo: repo, otpRepo: otpRepo, sender: sender, otp: otp, sessions: sessions}
 }
 
 func (s *PartService) CreateUser(ctx context.Context, username, email, avatar string) (*m.User, error) {
@@ -168,27 +164,6 @@ func (s *PartService) VerifyCode(ctx context.Context, email, code string) (*m.Ve
 	}
 
 	return &m.VerifyCodeResult{Token: token, RequiresRegister: true}, nil
-}
-
-func (s *PartService) GetAuthSession(ctx context.Context, token string) (*m.User, error) {
-	authSession, err := s.sharedAuthReder.GetAuth(ctx, token)
-	if err != nil {
-		return nil, fmt.Errorf("get auth session in s: %w", err)
-	}
-
-	sharedUser, err := s.sharedRepoUser.GetUserByID(ctx, authSession.UserID)
-	if err != nil {
-		return nil, fmt.Errorf("get user by id: %w", err)
-	}
-	user := m.User{
-		ID:        sharedUser.ID,
-		Username:  sharedUser.Username,
-		CreatedAt: sharedUser.CreatedAt,
-		Avatar:    sharedUser.Avatar,
-		Email:     sharedUser.Email,
-	}
-
-	return &user, nil
 }
 
 func (s *PartService) GetRegSession(ctx context.Context, token string) (string, error) {

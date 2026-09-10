@@ -19,13 +19,19 @@ func (h *PartHandler) MiddlAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		authSession, err := h.service.GetAuthSession(r.Context(), cookie.Value)
+		authSession, err := h.sharedAuthRedear.GetAuth(r.Context(), cookie.Value)
 		if err != nil {
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), UserIDContextKey, authSession.ID)
+		sharedUser, err := h.sharedRepoUsers.GetUserByID(r.Context(), authSession.UserID)
+		if err != nil {
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), UserIDContextKey, sharedUser.ID)
 
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

@@ -8,7 +8,7 @@ import (
 )
 
 type Repository interface {
-	SaveMassage(ctx context.Context, msg *m.Message) (*m.Message, error)
+	SaveMessage(ctx context.Context, msg *m.Message) (*m.Message, error)
 }
 
 type Service struct {
@@ -28,7 +28,7 @@ func (s *Service) CreateMessage(ctx context.Context, roomID, userID, avatar, tex
 		CreatedAt: time.Now().UTC(),
 	}
 
-	msg, err := s.repo.SaveMassage(ctx, msg)
+	msg, err := s.repo.SaveMessage(ctx, msg)
 	if err != nil {
 		return nil, fmt.Errorf("create message in repository: %w", err)
 	}

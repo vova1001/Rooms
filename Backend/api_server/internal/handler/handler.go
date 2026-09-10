@@ -11,17 +11,25 @@ import (
 
 	service "backend/api_server/internal/service"
 	m "backend/api_server/model"
+	sharedGetAuthS "backend/shared/getAuthSession"
+	sharedRepoUsers "backend/shared/users"
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
 )
 
 type PartHandler struct {
-	service *service.PartService
+	service          *service.PartService
+	sharedAuthRedear *sharedGetAuthS.Reader
+	sharedRepoUsers  *sharedRepoUsers.RepositoryUser
 }
 
-func NewHandler(service *service.PartService) *PartHandler {
-	return &PartHandler{service: service}
+func NewHandler(service *service.PartService, sharedAuthRedear *sharedGetAuthS.Reader, sharedRepoUsers *sharedRepoUsers.RepositoryUser) *PartHandler {
+	return &PartHandler{
+		service:          service,
+		sharedAuthRedear: sharedAuthRedear,
+		sharedRepoUsers:  sharedRepoUsers,
+	}
 }
 
 func (h *PartHandler) RegisterRoutes(r *http.ServeMux) {
@@ -264,12 +272,26 @@ func (h *PartHandler) GetSession(w http.ResponseWriter, r *http.Request) {
 	authCook, authErr := r.Cookie("auth_session")
 
 	if authErr == nil {
-		user, err := h.service.GetAuthSession(r.Context(), authCook.Value)
-
+		authSession, err := h.sharedAuthRedear.GetAuth(r.Context(), authCook.Value)
 		if err != nil {
 			clearCookie(w, "auth_session")
 			http.Error(w, "unauthorized", http.StatusUnauthorized)
 			return
+		}
+
+		sharedUser, err := h.sharedRepoUsers.GetUserByID(r.Context(), authSession.UserID)
+		if err != nil {
+			clearCookie(w, "auth_session")
+			http.Error(w, "unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		user := m.User{
+			ID:        sharedUser.ID,
+			Username:  sharedUser.Username,
+			CreatedAt: sharedUser.CreatedAt,
+			Avatar:    sharedUser.Avatar,
+			Email:     sharedUser.Email,
 		}
 
 		w.Header().Set("Content-Type", "application/json")

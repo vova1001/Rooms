@@ -9,7 +9,7 @@ func clearCookie(w http.ResponseWriter, name string) {
 		Path:     "/",
 		MaxAge:   -1,
 		HttpOnly: true,
-		Secure:   true, // true при HTTPS
+		Secure:   false,
 		SameSite: http.SameSiteLaxMode,
 	})
 }

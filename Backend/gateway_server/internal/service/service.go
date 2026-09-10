@@ -3,6 +3,7 @@ package service
 import (
 	r "backend/gateway_server/internal/repository"
 	rm "backend/gateway_server/internal/repository/message"
+	msg "backend/gateway_server/internal/service/message"
 	"backend/gateway_server/livekit"
 	m "backend/gateway_server/models"
 	"time"
@@ -16,9 +17,10 @@ type UserRepo interface {
 }
 
 type Service struct {
-	repo    *r.RepoPart
-	repoMsg *rm.Repository
-	LKS     *livekit.TokenService
+	repo       *r.RepoPart
+	repoMsg    *rm.Repository
+	LKS        *livekit.TokenService
+	ServiceMsg *msg.Service
 }
 
 type JoinResult struct {
@@ -28,8 +30,10 @@ type JoinResult struct {
 
 func NewService(repo *r.RepoPart, LKS *livekit.TokenService) *Service {
 	return &Service{
-		repo: repo,
-		LKS:  LKS,
+		repo:       repo,
+		repoMsg:    repo.RepoMsg,
+		LKS:        LKS,
+		ServiceMsg: msg.NewService(repo.RepoMsg),
 	}
 }
 

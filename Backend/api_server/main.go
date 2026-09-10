@@ -87,11 +87,9 @@ func main() {
 		repository,
 		sender,
 		serviceSession,
-		sharedAuthReader,
-		sharedRepoUsers,
 	)
 
-	handler := han.NewHandler(service)
+	handler := han.NewHandler(service, sharedAuthReader, sharedRepoUsers)
 
 	router := http.NewServeMux()
 	handler.RegisterRoutes(router)
