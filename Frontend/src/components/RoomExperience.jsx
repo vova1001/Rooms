@@ -38,6 +38,51 @@ import Avatar from './Avatar';
 
 const VOLUME_MAX = 200;
 
+// Safari (в т.ч. десктопный) и некоторые старые мобильные браузеры до сих
+// пор требуют префиксованные версии Fullscreen API.
+function getFullscreenElement() {
+  return (
+    document.fullscreenElement ||
+    document.webkitFullscreenElement ||
+    document.mozFullScreenElement ||
+    document.msFullscreenElement ||
+    null
+  );
+}
+
+function exitFullscreenCompat() {
+  const exit =
+    document.exitFullscreen ||
+    document.webkitExitFullscreen ||
+    document.mozCancelFullScreen ||
+    document.msExitFullscreen;
+
+  if (!exit) return Promise.resolve();
+  return exit.call(document);
+}
+
+// iOS Safari вообще не поддерживает Fullscreen API для произвольных
+// элементов (только для <video> через нестандартный webkitEnterFullscreen),
+// поэтому при отсутствии requestFullscreen у контейнера разворачиваем во
+// весь экран сам видео-элемент демонстрации.
+function requestFullscreenCompat(container) {
+  const request =
+    container.requestFullscreen ||
+    container.webkitRequestFullscreen ||
+    container.mozRequestFullScreen ||
+    container.msRequestFullscreen;
+
+  if (request) return request.call(container);
+
+  const video = container.querySelector('video');
+  if (video?.webkitEnterFullscreen) {
+    video.webkitEnterFullscreen();
+    return Promise.resolve();
+  }
+
+  return Promise.reject(new Error('Полноэкранный режим не поддерживается в этом браузере'));
+}
+
 function trackKey(trackRef) {
   return (
     trackRef.publication?.trackSid ||
@@ -117,14 +162,23 @@ function useOutsideDismiss(open, onClose, refs) {
       if (!insideAny) onClose();
     };
 
+    // На мобильных синтетический mousedown после touchend приходит с
+    // задержкой, поэтому дублируем обработчик на touchstart — иначе тап
+    // вне меню на телефоне закрывает его не сразу или не закрывает вовсе.
     document.addEventListener('mousedown', handlePointer);
+    document.addEventListener('touchstart', handlePointer, { passive: true });
+
+    // Закрываем меню при реальном скролле страницы наружу, но НЕ при
+    // resize: на телефонах innerHeight/innerWidth меняется сам по себе
+    // (скрытие адресной строки, появление системной клавиатуры) прямо во
+    // время обычного перетаскивания ползунка внутри этого же меню — из-за
+    // чего попап раньше закрывался посреди взаимодействия с ним.
     window.addEventListener('scroll', onClose, true);
-    window.addEventListener('resize', onClose);
 
     return () => {
       document.removeEventListener('mousedown', handlePointer);
+      document.removeEventListener('touchstart', handlePointer);
       window.removeEventListener('scroll', onClose, true);
-      window.removeEventListener('resize', onClose);
     };
   }, [open, onClose, refs]);
 }
@@ -426,6 +480,27 @@ function RoomInterior({ room, user, onLeave }) {
     return supportsRestrictOwnAudio ? { restrictOwnAudio: true } : true;
   }, []);
 
+  // Мобильные браузеры (Chrome/Safari/Firefox для Android и iOS) не реализуют
+  // Screen Capture API вообще — там нет самого navigator.mediaDevices.getDisplayMedia,
+  // поэтому демонстрацию экрана со смартфона нельзя начать в принципе. Определяем
+  // это заранее, чтобы не показывать рабочую на вид, но нефункциональную кнопку.
+  const isScreenShareSupported = useMemo(
+    () =>
+      typeof navigator !== 'undefined' &&
+      typeof navigator.mediaDevices?.getDisplayMedia === 'function',
+    [],
+  );
+
+  // Короткое сообщение об ошибке демонстрации экрана (например, отказано в
+  // доступе). Показываем рядом с кнопками управления и убираем через время.
+  const [screenShareError, setScreenShareError] = useState(null);
+
+  useEffect(() => {
+    if (!screenShareError) return undefined;
+    const timeoutId = setTimeout(() => setScreenShareError(null), 6000);
+    return () => clearTimeout(timeoutId);
+  }, [screenShareError]);
+
   const screenTracks = useTracks([
     {
       source: Track.Source.ScreenShare,
@@ -490,9 +565,9 @@ function RoomInterior({ room, user, onLeave }) {
   };
 
   const closeDemoView = async () => {
-    if (document.fullscreenElement === screenContainerRef.current) {
+    if (getFullscreenElement() === screenContainerRef.current) {
       try {
-        await document.exitFullscreen();
+        await exitFullscreenCompat();
       } catch (error) {
         console.error('Не удалось выйти из полноэкранного режима:', error);
       }
@@ -508,13 +583,19 @@ function RoomInterior({ room, user, onLeave }) {
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(document.fullscreenElement === screenContainerRef.current);
+      setIsFullscreen(getFullscreenElement() === screenContainerRef.current);
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
 
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
     };
   }, []);
 
@@ -540,12 +621,12 @@ function RoomInterior({ room, user, onLeave }) {
     if (!container) return;
 
     try {
-      if (document.fullscreenElement === container) {
-        await document.exitFullscreen();
+      if (getFullscreenElement() === container) {
+        await exitFullscreenCompat();
         return;
       }
 
-      await container.requestFullscreen();
+      await requestFullscreenCompat(container);
     } catch (error) {
       console.error('Не удалось открыть полноэкранный режим:', error);
     }
@@ -736,51 +817,78 @@ function RoomInterior({ room, user, onLeave }) {
             {isMicrophoneEnabled ? <Mic size={20} /> : <MicOff size={20} />}
           </TrackToggle>
 
-          <TrackToggle
-            className="screen-toggle"
-            source={Track.Source.ScreenShare}
-            showIcon={false}
-            captureOptions={{
-              audio: screenAudioOptions,
-              // Всегда запрашиваем 1080p30. При нехватке канала WebRTC
-              // старается сохранить 30 FPS, снижая качество/битрейт картинки.
-              resolution: {
-                width: 1920,
-                height: 1080,
-                frameRate: 30,
-              },
-              contentHint: 'motion',
-              // Не даём выбрать саму вкладку с этим приложением источником показа.
-              selfBrowserSurface: 'exclude',
-            }}
-            publishOptions={{
-              screenShareEncoding: {
-                maxBitrate: 5_000_000,
-                maxFramerate: 30,
-                priority: 'high',
-              },
-              // При просадках канала WebRTC в первую очередь уменьшает качество,
-              // а не резко превращает 30 FPS в слайд-шоу.
-              degradationPreference: 'maintain-framerate',
-              simulcast: true,
-            }}
-            onDeviceError={(error) => {
-              console.error('Ошибка демонстрации экрана:', error);
-            }}
-          >
-            {isScreenShareEnabled ? (
-              <MonitorX size={20} />
-            ) : (
+          {isScreenShareSupported ? (
+            <TrackToggle
+              className="screen-toggle"
+              source={Track.Source.ScreenShare}
+              showIcon={false}
+              captureOptions={{
+                audio: screenAudioOptions,
+                // Всегда запрашиваем 1080p30. При нехватке канала WebRTC
+                // старается сохранить 30 FPS, снижая качество/битрейт картинки.
+                resolution: {
+                  width: 1920,
+                  height: 1080,
+                  frameRate: 30,
+                },
+                contentHint: 'motion',
+                // Не даём выбрать саму вкладку с этим приложением источником показа.
+                selfBrowserSurface: 'exclude',
+              }}
+              publishOptions={{
+                screenShareEncoding: {
+                  maxBitrate: 5_000_000,
+                  maxFramerate: 30,
+                  priority: 'high',
+                },
+                // При просадках канала WebRTC в первую очередь уменьшает качество,
+                // а не резко превращает 30 FPS в слайд-шоу.
+                degradationPreference: 'maintain-framerate',
+                simulcast: true,
+              }}
+              onDeviceError={(error) => {
+                console.error('Ошибка демонстрации экрана:', error);
+                setScreenShareError(
+                  'Не удалось включить демонстрацию экрана. Проверьте разрешения браузера и повторите попытку.',
+                );
+              }}
+            >
+              {isScreenShareEnabled ? (
+                <MonitorX size={20} />
+              ) : (
+                <MonitorUp size={20} />
+              )}
+            </TrackToggle>
+          ) : (
+            // TrackToggle из @livekit/components-react всегда сбрасывает свой
+            // disabled в false (управляется внутренним состоянием "pending"),
+            // поэтому для реально нерабочего случая рендерим обычную кнопку,
+            // а не пытаемся отключить TrackToggle пропом.
+            <button
+              type="button"
+              className="screen-toggle"
+              disabled
+              title="Демонстрация экрана недоступна в мобильном браузере — откройте комнату с компьютера"
+              aria-label="Демонстрация экрана недоступна на этом устройстве"
+            >
               <MonitorUp size={20} />
-            )}
-          </TrackToggle>
+            </button>
+          )}
         </div>
 
         <span className="control-hint">
           {isMicrophoneEnabled ? 'Микрофон включён' : 'Микрофон выключен'}
           {' · '}
-          {isScreenShareEnabled ? 'Идёт показ экрана' : 'Показ экрана выключен'}
+          {!isScreenShareSupported
+            ? 'Демонстрация экрана недоступна на этом устройстве'
+            : isScreenShareEnabled
+              ? 'Идёт показ экрана'
+              : 'Показ экрана выключен'}
         </span>
+
+        {screenShareError && (
+          <div className="error-banner control-error-banner">{screenShareError}</div>
+        )}
       </footer>
 
       <RoomAudioRenderer />
