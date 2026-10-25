@@ -19,6 +19,9 @@ services:
       timeout: 5s
       retries: 10
 
+    ports:
+      - "5433:5432"
+
     networks:
       - rooms-net
 

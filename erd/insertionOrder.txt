@@ -1,0 +1,9 @@
+users
+events
+rooms
+bookings
+event_schedules
+messages
+notifications
+room_users
+avatars

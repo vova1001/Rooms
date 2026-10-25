@@ -1,0 +1,1756 @@
+<?xml version="1.0" encoding="UTF-8"?><database name="rooms" schema="public" type="PostgreSQL - 16.15">
+   <tables>
+      <table name="avatars" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="gen_random_uuid()" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="url" nullable="false" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="true" digits="0" id="2" name="is_active" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="avatars_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="avatars_url_key" unique="true">
+            <column ascending="true" name="url"/>
+         </index>
+      </table>
+      <table name="bookings" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="gen_random_uuid()" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <child column="booking_id" foreignKey="notifications_booking_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="notifications"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="user_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="bookings_user_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="users"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="event_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="bookings_event_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="events"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="3" name="start_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="4" name="end_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="'confirmed'::character varying" digits="0" id="5" name="status" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="6" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="bookings_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="bookings_event_id_tstzrange_excl" unique="false">
+            <column ascending="true" name="event_id"/>
+         </index>
+      </table>
+      <table name="event_schedules" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="gen_random_uuid()" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="event_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="event_schedules_event_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="events"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="date" nullable="false" remarks="" size="13" type="date" typeCode="91"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="3" name="start_time" nullable="false" remarks="" size="15" type="time" typeCode="92"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="4" name="end_time" nullable="false" remarks="" size="15" type="time" typeCode="92"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="event_schedules_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="events" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="gen_random_uuid()" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <child column="event_id" foreignKey="bookings_event_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="bookings"/>
+            <child column="event_id" foreignKey="event_schedules_event_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="event_schedules"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="title" nullable="false" remarks="" size="200" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="description" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="0" digits="2" id="3" name="price" nullable="false" remarks="" size="10" type="numeric" typeCode="2"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="duration_minutes" nullable="false" remarks="" size="10" type="int4" typeCode="4"/>
+         <column autoUpdated="false" defaultValue="'active'::character varying" digits="0" id="5" name="status" nullable="false" remarks="" size="20" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="6" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="events_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="messages" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="gen_random_uuid()" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="room_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="messages_room_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="rooms"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="user_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="messages_user_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="users"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="msg" nullable="false" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="4" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="5" name="updated_at" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="null" digits="6" id="6" name="deleted_at" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="messages_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="idx_msg_room_created" unique="false">
+            <column ascending="true" name="room_id"/>
+            <column ascending="false" name="created_at"/>
+         </index>
+      </table>
+      <table name="notifications" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="gen_random_uuid()" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="user_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="notifications_user_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="users"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="booking_id" nullable="true" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="notifications_booking_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="bookings"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="type" nullable="false" remarks="" size="30" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="4" name="text" nullable="false" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="false" digits="0" id="5" name="is_read" nullable="false" remarks="" size="1" type="bool" typeCode="-7"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="6" name="created_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="notifications_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="room_users" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="room_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="room_users_room_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="rooms"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="user_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="room_users_user_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="users"/>
+         </column>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="2" name="joined_at" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <primaryKey column="room_id" sequenceNumberInPK="1"/>
+         <primaryKey column="user_id" sequenceNumberInPK="2"/>
+         <index name="room_users_pkey" unique="true">
+            <column ascending="true" name="room_id"/>
+            <column ascending="true" name="user_id"/>
+         </index>
+      </table>
+      <table name="rooms" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <child column="room_id" foreignKey="messages_room_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="messages"/>
+            <child column="room_id" foreignKey="room_users_room_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="room_users"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="name" nullable="false" remarks="" size="100" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="owner_id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <parent column="id" foreignKey="rooms_owner_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="users"/>
+         </column>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="3" name="created_at" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="rooms_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+      </table>
+      <table name="users" remarks="" schema="public" type="TABLE">
+         <column autoUpdated="false" defaultValue="null" digits="0" id="0" name="id" nullable="false" remarks="" size="2147483647" type="uuid" typeCode="1111">
+            <child column="user_id" foreignKey="bookings_user_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="bookings"/>
+            <child column="user_id" foreignKey="messages_user_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="messages"/>
+            <child column="user_id" foreignKey="notifications_user_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="notifications"/>
+            <child column="user_id" foreignKey="room_users_user_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="room_users"/>
+            <child column="owner_id" foreignKey="rooms_owner_id_fkey" implied="false" onDeleteCascade="true" schema="public" table="rooms"/>
+         </column>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="1" name="username" nullable="false" remarks="" size="50" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="2" name="email" nullable="false" remarks="" size="254" type="varchar" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="null" digits="0" id="3" name="avatar" nullable="true" remarks="" size="2147483647" type="text" typeCode="12"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="4" name="created_at" nullable="true" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <column autoUpdated="false" defaultValue="now()" digits="6" id="5" name="updated_at" nullable="false" remarks="" size="35" type="timestamptz" typeCode="93"/>
+         <primaryKey column="id" sequenceNumberInPK="1"/>
+         <index name="users_pkey" unique="true">
+            <column ascending="true" name="id"/>
+         </index>
+         <index name="users_email_key" unique="true">
+            <column ascending="true" name="email"/>
+         </index>
+      </table>
+   </tables>
+   <routines>
+      <routine dataAccess="MODIFIES" deterministic="true" name="cash_dist(money, money)" returnType="money" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[cash_dist]]></definition>
+         <parameters>
+            <parameter mode="IN" type="money"/>
+            <parameter mode="IN" type="money"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="date_dist(date, date)" returnType="integer" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[date_dist]]></definition>
+         <parameters>
+            <parameter mode="IN" type="date"/>
+            <parameter mode="IN" type="date"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="float4_dist(real, real)" returnType="real" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[float4_dist]]></definition>
+         <parameters>
+            <parameter mode="IN" type="real"/>
+            <parameter mode="IN" type="real"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="float8_dist(double precision, double precision)" returnType="double precision" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[float8_dist]]></definition>
+         <parameters>
+            <parameter mode="IN" type="double precision"/>
+            <parameter mode="IN" type="double precision"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_bit_compress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_bit_compress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_bit_consistent(internal, bit, smallint, oid, internal)" returnType="boolean" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_bit_consistent]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="bit"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_bit_penalty(internal, internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_bit_penalty]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_bit_picksplit(internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_bit_picksplit]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_bit_same(gbtreekey_var, gbtreekey_var, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_bit_same]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey_var"/>
+            <parameter mode="IN" type="gbtreekey_var"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_bit_union(internal, internal)" returnType="gbtreekey_var" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_bit_union]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_bool_compress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_bool_compress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_bool_consistent(internal, boolean, smallint, oid, internal)" returnType="boolean" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_bool_consistent]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="boolean"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_bool_fetch(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_bool_fetch]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_bool_penalty(internal, internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_bool_penalty]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_bool_picksplit(internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_bool_picksplit]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_bool_same(gbtreekey2, gbtreekey2, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_bool_same]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey2"/>
+            <parameter mode="IN" type="gbtreekey2"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_bool_union(internal, internal)" returnType="gbtreekey2" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_bool_union]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_bpchar_compress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_bpchar_compress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_bpchar_consistent(internal, character, smallint, oid, internal)" returnType="boolean" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_bpchar_consistent]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="character"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_bytea_compress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_bytea_compress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_bytea_consistent(internal, bytea, smallint, oid, internal)" returnType="boolean" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_bytea_consistent]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="bytea"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_bytea_penalty(internal, internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_bytea_penalty]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_bytea_picksplit(internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_bytea_picksplit]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_bytea_same(gbtreekey_var, gbtreekey_var, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_bytea_same]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey_var"/>
+            <parameter mode="IN" type="gbtreekey_var"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_bytea_union(internal, internal)" returnType="gbtreekey_var" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_bytea_union]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_cash_compress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_cash_compress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_cash_consistent(internal, money, smallint, oid, internal)" returnType="boolean" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_cash_consistent]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="money"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_cash_distance(internal, money, smallint, oid, internal)" returnType="double precision" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_cash_distance]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="money"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_cash_fetch(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_cash_fetch]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_cash_penalty(internal, internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_cash_penalty]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_cash_picksplit(internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_cash_picksplit]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_cash_same(gbtreekey16, gbtreekey16, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_cash_same]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey16"/>
+            <parameter mode="IN" type="gbtreekey16"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_cash_union(internal, internal)" returnType="gbtreekey16" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_cash_union]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_date_compress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_date_compress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_date_consistent(internal, date, smallint, oid, internal)" returnType="boolean" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_date_consistent]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="date"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_date_distance(internal, date, smallint, oid, internal)" returnType="double precision" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_date_distance]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="date"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_date_fetch(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_date_fetch]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_date_penalty(internal, internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_date_penalty]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_date_picksplit(internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_date_picksplit]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_date_same(gbtreekey8, gbtreekey8, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_date_same]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey8"/>
+            <parameter mode="IN" type="gbtreekey8"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_date_union(internal, internal)" returnType="gbtreekey8" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_date_union]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_decompress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_decompress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_enum_compress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_enum_compress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_enum_consistent(internal, anyenum, smallint, oid, internal)" returnType="boolean" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_enum_consistent]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="anyenum"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_enum_fetch(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_enum_fetch]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_enum_penalty(internal, internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_enum_penalty]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_enum_picksplit(internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_enum_picksplit]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_enum_same(gbtreekey8, gbtreekey8, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_enum_same]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey8"/>
+            <parameter mode="IN" type="gbtreekey8"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_enum_union(internal, internal)" returnType="gbtreekey8" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_enum_union]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_float4_compress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_float4_compress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_float4_consistent(internal, real, smallint, oid, internal)" returnType="boolean" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_float4_consistent]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="real"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_float4_distance(internal, real, smallint, oid, internal)" returnType="double precision" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_float4_distance]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="real"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_float4_fetch(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_float4_fetch]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_float4_penalty(internal, internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_float4_penalty]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_float4_picksplit(internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_float4_picksplit]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_float4_same(gbtreekey8, gbtreekey8, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_float4_same]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey8"/>
+            <parameter mode="IN" type="gbtreekey8"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_float4_union(internal, internal)" returnType="gbtreekey8" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_float4_union]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_float8_compress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_float8_compress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_float8_consistent(internal, double precision, smallint, oid, internal)" returnType="boolean" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_float8_consistent]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="double precision"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_float8_distance(internal, double precision, smallint, oid, internal)" returnType="double precision" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_float8_distance]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="double precision"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_float8_fetch(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_float8_fetch]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_float8_penalty(internal, internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_float8_penalty]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_float8_picksplit(internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_float8_picksplit]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_float8_same(gbtreekey16, gbtreekey16, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_float8_same]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey16"/>
+            <parameter mode="IN" type="gbtreekey16"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_float8_union(internal, internal)" returnType="gbtreekey16" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_float8_union]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_inet_compress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_inet_compress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_inet_consistent(internal, inet, smallint, oid, internal)" returnType="boolean" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_inet_consistent]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="inet"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_inet_penalty(internal, internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_inet_penalty]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_inet_picksplit(internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_inet_picksplit]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_inet_same(gbtreekey16, gbtreekey16, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_inet_same]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey16"/>
+            <parameter mode="IN" type="gbtreekey16"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_inet_union(internal, internal)" returnType="gbtreekey16" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_inet_union]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_int2_compress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_int2_compress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_int2_consistent(internal, smallint, smallint, oid, internal)" returnType="boolean" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_int2_consistent]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_int2_distance(internal, smallint, smallint, oid, internal)" returnType="double precision" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_int2_distance]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_int2_fetch(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_int2_fetch]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_int2_penalty(internal, internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_int2_penalty]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_int2_picksplit(internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_int2_picksplit]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_int2_same(gbtreekey4, gbtreekey4, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_int2_same]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey4"/>
+            <parameter mode="IN" type="gbtreekey4"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_int2_union(internal, internal)" returnType="gbtreekey4" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_int2_union]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_int4_compress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_int4_compress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_int4_consistent(internal, integer, smallint, oid, internal)" returnType="boolean" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_int4_consistent]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="integer"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_int4_distance(internal, integer, smallint, oid, internal)" returnType="double precision" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_int4_distance]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="integer"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_int4_fetch(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_int4_fetch]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_int4_penalty(internal, internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_int4_penalty]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_int4_picksplit(internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_int4_picksplit]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_int4_same(gbtreekey8, gbtreekey8, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_int4_same]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey8"/>
+            <parameter mode="IN" type="gbtreekey8"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_int4_union(internal, internal)" returnType="gbtreekey8" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_int4_union]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_int8_compress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_int8_compress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_int8_consistent(internal, bigint, smallint, oid, internal)" returnType="boolean" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_int8_consistent]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="bigint"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_int8_distance(internal, bigint, smallint, oid, internal)" returnType="double precision" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_int8_distance]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="bigint"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_int8_fetch(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_int8_fetch]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_int8_penalty(internal, internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_int8_penalty]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_int8_picksplit(internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_int8_picksplit]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_int8_same(gbtreekey16, gbtreekey16, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_int8_same]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey16"/>
+            <parameter mode="IN" type="gbtreekey16"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_int8_union(internal, internal)" returnType="gbtreekey16" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_int8_union]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_intv_compress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_intv_compress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_intv_consistent(internal, interval, smallint, oid, internal)" returnType="boolean" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_intv_consistent]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="interval"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_intv_decompress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_intv_decompress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_intv_distance(internal, interval, smallint, oid, internal)" returnType="double precision" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_intv_distance]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="interval"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_intv_fetch(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_intv_fetch]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_intv_penalty(internal, internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_intv_penalty]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_intv_picksplit(internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_intv_picksplit]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_intv_same(gbtreekey32, gbtreekey32, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_intv_same]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey32"/>
+            <parameter mode="IN" type="gbtreekey32"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_intv_union(internal, internal)" returnType="gbtreekey32" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_intv_union]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_macad8_compress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_macad8_compress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_macad8_consistent(internal, macaddr8, smallint, oid, internal)" returnType="boolean" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_macad8_consistent]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="macaddr8"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_macad8_fetch(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_macad8_fetch]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_macad8_penalty(internal, internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_macad8_penalty]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_macad8_picksplit(internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_macad8_picksplit]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_macad8_same(gbtreekey16, gbtreekey16, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_macad8_same]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey16"/>
+            <parameter mode="IN" type="gbtreekey16"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_macad8_union(internal, internal)" returnType="gbtreekey16" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_macad8_union]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_macad_compress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_macad_compress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_macad_consistent(internal, macaddr, smallint, oid, internal)" returnType="boolean" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_macad_consistent]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="macaddr"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_macad_fetch(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_macad_fetch]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_macad_penalty(internal, internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_macad_penalty]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_macad_picksplit(internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_macad_picksplit]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_macad_same(gbtreekey16, gbtreekey16, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_macad_same]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey16"/>
+            <parameter mode="IN" type="gbtreekey16"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_macad_union(internal, internal)" returnType="gbtreekey16" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_macad_union]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_numeric_compress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_numeric_compress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_numeric_consistent(internal, numeric, smallint, oid, internal)" returnType="boolean" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_numeric_consistent]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="numeric"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_numeric_penalty(internal, internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_numeric_penalty]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_numeric_picksplit(internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_numeric_picksplit]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_numeric_same(gbtreekey_var, gbtreekey_var, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_numeric_same]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey_var"/>
+            <parameter mode="IN" type="gbtreekey_var"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_numeric_union(internal, internal)" returnType="gbtreekey_var" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_numeric_union]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_oid_compress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_oid_compress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_oid_consistent(internal, oid, smallint, oid, internal)" returnType="boolean" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_oid_consistent]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_oid_distance(internal, oid, smallint, oid, internal)" returnType="double precision" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_oid_distance]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_oid_fetch(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_oid_fetch]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_oid_penalty(internal, internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_oid_penalty]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_oid_picksplit(internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_oid_picksplit]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_oid_same(gbtreekey8, gbtreekey8, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_oid_same]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey8"/>
+            <parameter mode="IN" type="gbtreekey8"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_oid_union(internal, internal)" returnType="gbtreekey8" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_oid_union]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_text_compress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_text_compress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_text_consistent(internal, text, smallint, oid, internal)" returnType="boolean" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_text_consistent]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="text"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_text_penalty(internal, internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_text_penalty]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_text_picksplit(internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_text_picksplit]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_text_same(gbtreekey_var, gbtreekey_var, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_text_same]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey_var"/>
+            <parameter mode="IN" type="gbtreekey_var"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_text_union(internal, internal)" returnType="gbtreekey_var" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_text_union]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_time_compress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_time_compress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_time_consistent(internal, time without time zone, smallint, oid, internal)" returnType="boolean" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_time_consistent]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="time without time zone"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_time_distance(internal, time without time zone, smallint, oid, internal)" returnType="double precision" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_time_distance]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="time without time zone"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_time_fetch(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_time_fetch]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_time_penalty(internal, internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_time_penalty]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_time_picksplit(internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_time_picksplit]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_time_same(gbtreekey16, gbtreekey16, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_time_same]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey16"/>
+            <parameter mode="IN" type="gbtreekey16"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_time_union(internal, internal)" returnType="gbtreekey16" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_time_union]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_timetz_compress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_timetz_compress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_timetz_consistent(internal, time with time zone, smallint, oid, internal)" returnType="boolean" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_timetz_consistent]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="time with time zone"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_ts_compress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_ts_compress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_ts_consistent(internal, timestamp without time zone, smallint, oid, internal)" returnType="boolean" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_ts_consistent]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="timestamp without time zone"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_ts_distance(internal, timestamp without time zone, smallint, oid, internal)" returnType="double precision" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_ts_distance]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="timestamp without time zone"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_ts_fetch(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_ts_fetch]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_ts_penalty(internal, internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_ts_penalty]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_ts_picksplit(internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_ts_picksplit]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_ts_same(gbtreekey16, gbtreekey16, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_ts_same]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey16"/>
+            <parameter mode="IN" type="gbtreekey16"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_ts_union(internal, internal)" returnType="gbtreekey16" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_ts_union]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_tstz_compress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_tstz_compress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_tstz_consistent(internal, timestamp with time zone, smallint, oid, internal)" returnType="boolean" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_tstz_consistent]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="timestamp with time zone"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_tstz_distance(internal, timestamp with time zone, smallint, oid, internal)" returnType="double precision" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_tstz_distance]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="timestamp with time zone"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_uuid_compress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_uuid_compress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_uuid_consistent(internal, uuid, smallint, oid, internal)" returnType="boolean" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_uuid_consistent]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="uuid"/>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_uuid_fetch(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_uuid_fetch]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_uuid_penalty(internal, internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_uuid_penalty]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_uuid_picksplit(internal, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_uuid_picksplit]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_uuid_same(gbtreekey32, gbtreekey32, internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_uuid_same]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey32"/>
+            <parameter mode="IN" type="gbtreekey32"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_uuid_union(internal, internal)" returnType="gbtreekey32" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_uuid_union]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_var_decompress(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_var_decompress]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbt_var_fetch(internal)" returnType="internal" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbt_var_fetch]]></definition>
+         <parameters>
+            <parameter mode="IN" type="internal"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbtreekey16_in(cstring)" returnType="gbtreekey16" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbtreekey_in]]></definition>
+         <parameters>
+            <parameter mode="IN" type="cstring"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbtreekey16_out(gbtreekey16)" returnType="cstring" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbtreekey_out]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey16"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbtreekey2_in(cstring)" returnType="gbtreekey2" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbtreekey_in]]></definition>
+         <parameters>
+            <parameter mode="IN" type="cstring"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbtreekey2_out(gbtreekey2)" returnType="cstring" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbtreekey_out]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey2"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbtreekey32_in(cstring)" returnType="gbtreekey32" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbtreekey_in]]></definition>
+         <parameters>
+            <parameter mode="IN" type="cstring"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbtreekey32_out(gbtreekey32)" returnType="cstring" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbtreekey_out]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey32"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbtreekey4_in(cstring)" returnType="gbtreekey4" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbtreekey_in]]></definition>
+         <parameters>
+            <parameter mode="IN" type="cstring"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbtreekey4_out(gbtreekey4)" returnType="cstring" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbtreekey_out]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey4"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbtreekey8_in(cstring)" returnType="gbtreekey8" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbtreekey_in]]></definition>
+         <parameters>
+            <parameter mode="IN" type="cstring"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbtreekey8_out(gbtreekey8)" returnType="cstring" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbtreekey_out]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey8"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbtreekey_var_in(cstring)" returnType="gbtreekey_var" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbtreekey_in]]></definition>
+         <parameters>
+            <parameter mode="IN" type="cstring"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="gbtreekey_var_out(gbtreekey_var)" returnType="cstring" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[gbtreekey_out]]></definition>
+         <parameters>
+            <parameter mode="IN" type="gbtreekey_var"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="int2_dist(smallint, smallint)" returnType="smallint" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[int2_dist]]></definition>
+         <parameters>
+            <parameter mode="IN" type="smallint"/>
+            <parameter mode="IN" type="smallint"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="int4_dist(integer, integer)" returnType="integer" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[int4_dist]]></definition>
+         <parameters>
+            <parameter mode="IN" type="integer"/>
+            <parameter mode="IN" type="integer"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="int8_dist(bigint, bigint)" returnType="bigint" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[int8_dist]]></definition>
+         <parameters>
+            <parameter mode="IN" type="bigint"/>
+            <parameter mode="IN" type="bigint"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="interval_dist(interval, interval)" returnType="interval" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[interval_dist]]></definition>
+         <parameters>
+            <parameter mode="IN" type="interval"/>
+            <parameter mode="IN" type="interval"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="oid_dist(oid, oid)" returnType="oid" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[oid_dist]]></definition>
+         <parameters>
+            <parameter mode="IN" type="oid"/>
+            <parameter mode="IN" type="oid"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="time_dist(time without time zone, time without time zone)" returnType="interval" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[time_dist]]></definition>
+         <parameters>
+            <parameter mode="IN" type="time without time zone"/>
+            <parameter mode="IN" type="time without time zone"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="ts_dist(timestamp without time zone, timestamp without time zone)" returnType="interval" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[ts_dist]]></definition>
+         <parameters>
+            <parameter mode="IN" type="timestamp without time zone"/>
+            <parameter mode="IN" type="timestamp without time zone"/>
+         </parameters>
+      </routine>
+      <routine dataAccess="MODIFIES" deterministic="true" name="tstz_dist(timestamp with time zone, timestamp with time zone)" returnType="interval" securityType="INVOKER" type="FUNCTION">
+         <comment/>
+         <definition language="c"><![CDATA[tstz_dist]]></definition>
+         <parameters>
+            <parameter mode="IN" type="timestamp with time zone"/>
+            <parameter mode="IN" type="timestamp with time zone"/>
+         </parameters>
+      </routine>
+   </routines>
+</database>
