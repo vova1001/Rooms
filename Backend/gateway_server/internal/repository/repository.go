@@ -10,20 +10,21 @@ import (
 	m "backend/gateway_server/models"
 
 	rm "backend/gateway_server/internal/repository/message"
+	rl "backend/gateway_server/internal/repository/ratelimit"
 
 	"github.com/redis/go-redis/v9"
 )
 
 type RepoPart struct {
-	rdb     *redis.Client
-	db      *sql.DB
-	RepoMsg *rm.Repository
+	rdb       *redis.Client
+	db        *sql.DB
+	RepoMsg   *rm.Repository
+	RateLimit *rl.Repository
 }
 
 func NewRepoPart(rdb *redis.Client, db *sql.DB) *RepoPart {
-	return &RepoPart{rdb: rdb, db: db, RepoMsg: rm.New(db)}
+	return &RepoPart{rdb: rdb, db: db, RepoMsg: rm.New(db), RateLimit: rl.New(rdb)}
 }
-
 func (r RepoPart) AddUser(ctx context.Context, roomId string, user *m.User) error {
 	pipe := r.rdb.TxPipeline()
 

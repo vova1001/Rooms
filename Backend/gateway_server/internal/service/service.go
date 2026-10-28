@@ -33,7 +33,7 @@ func NewService(repo *r.RepoPart, LKS *livekit.TokenService) *Service {
 		repo:       repo,
 		repoMsg:    repo.RepoMsg,
 		LKS:        LKS,
-		ServiceMsg: msg.NewService(repo.RepoMsg),
+		ServiceMsg: msg.NewService(repo.RepoMsg, repo.RateLimit),
 	}
 }
 
