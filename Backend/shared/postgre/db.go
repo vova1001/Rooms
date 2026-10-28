@@ -97,7 +97,7 @@ func Migrate(db *sql.DB) error {
 	}
 	log.Println("Table 'msg' ready")
 
-		_, err = db.Exec(`CREATE EXTENSION IF NOT EXISTS btree_gist`)
+	_, err = db.Exec(`CREATE EXTENSION IF NOT EXISTS btree_gist`)
 	if err != nil {
 		return fmt.Errorf("create extension btree_gist: %w", err)
 	}
@@ -168,8 +168,17 @@ func Migrate(db *sql.DB) error {
 	}
 	log.Println("Table 'notifications' ready")
 
-	
+	_, err = db.Exec(`
+	CREATE TABLE IF NOT EXISTS profiles(
+		user_id    UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+		bio        VARCHAR(500) NOT NULL DEFAULT '',
+		updated_at TIMESTAMPTZ  NOT NULL DEFAULT NOW()
+		)
+	`)
 
+	if err != nil {
+		return fmt.Errorf("create profiles failed: %w", err)
+	}
 
 	_, err = db.Exec(`
 		CREATE INDEX IF NOT EXISTS idx_msg_room_created
