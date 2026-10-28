@@ -20,11 +20,11 @@ export default function RoomPage() {
     }
   }, [roomId]);
 
-  const { connection, status, error } = useGatewayJoin({ roomId, user });
+  const { connection, status, error, chat } = useGatewayJoin({ roomId, user });
   const leave = () => navigate('/');
 
   if (connection) {
-    return <RoomExperience room={room} user={user} connection={connection} onLeave={leave} />;
+    return <RoomExperience room={room} user={user} connection={connection} chat={chat} onLeave={leave} />;
   }
 
   return (

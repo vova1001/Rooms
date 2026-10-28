@@ -41,3 +41,7 @@ type EditMessagePayload struct {
 type DeleteMessagePayload struct {
 	MessageID string `json:"message_id"`
 }
+
+type HistoryPayload struct {
+	Before *time.Time `json:"before"`
+}

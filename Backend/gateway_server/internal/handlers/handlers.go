@@ -3,11 +3,14 @@ package handlers
 import (
 	hm "backend/gateway_server/internal/handlers/message"
 	s "backend/gateway_server/internal/service"
+	smsg "backend/gateway_server/internal/service/message"
 	m "backend/gateway_server/models"
 	sharedGetAuthS "backend/shared/getAuthSession"
 	sharedRepoUsers "backend/shared/users"
 
 	"context"
+	"encoding/json"
+	"errors"
 	"log"
 	"net/http"
 	"sync"
@@ -26,12 +29,14 @@ type Client struct {
 	UserName string
 	Avatar   string
 	Conn     *websocket.Conn
+	writeMu  sync.Mutex
 }
 
 type Handler struct {
 	s                *s.Service
 	mu               sync.RWMutex
 	conns            map[string]*Client
+	rooms            map[string]map[string]*Client
 	sharedAuthRedear *sharedGetAuthS.Reader
 	sharedRepoUsers  *sharedRepoUsers.RepositoryUser
 	handlerMsg       *hm.Handler
@@ -42,6 +47,7 @@ func NewHandler(s *s.Service, authReader *sharedGetAuthS.Reader, sharedRepoUsers
 		s:                s,
 		mu:               sync.RWMutex{},
 		conns:            make(map[string]*Client),
+		rooms:            make(map[string]map[string]*Client),
 		sharedAuthRedear: authReader,
 		sharedRepoUsers:  sharedRepoUsers,
 		handlerMsg:       hm.NewHandler(s.ServiceMsg),
@@ -147,15 +153,32 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.conns[userID] = client
+	if h.rooms[roomID] == nil {
+		h.rooms[roomID] = make(map[string]*Client)
+	}
+	h.rooms[roomID][userID] = client
 	h.mu.Unlock()
 
 	defer func() {
 		h.mu.Lock()
 		if currentClient, ok := h.conns[userID]; ok && currentClient.Conn == conn {
 			delete(h.conns, userID)
+			delete(h.rooms[roomID], userID)
+			if len(h.rooms[roomID]) == 0 {
+				delete(h.rooms, roomID)
+			}
 		}
 		h.mu.Unlock()
 	}()
+	history, err := h.handlerMsg.History(ctx, roomID, nil)
+	if err != nil {
+		log.Printf("history room=%s: %v", roomID, err)
+	} else {
+		client.Send(map[string]any{
+			"type": "message.history",
+			"data": history,
+		})
+	}
 
 	for {
 		_, msg, err := conn.ReadMessage()
@@ -163,6 +186,61 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			log.Printf("%s disconnected", userID)
 			break
 		}
-		log.Printf("msg from %s: %s", userID, string(msg))
+		var event m.IncomingEvent
+		if err := json.Unmarshal(msg, &event); err != nil {
+			client.Send(map[string]string{"type": "message.error", "error": "bad json"})
+			continue
+		}
+
+		switch event.Type {
+		case "message.create":
+			message, err := h.handlerMsg.Create(ctx, roomID, userID, user.UserName, user.Avatar, event.Data)
+			if errors.Is(err, smsg.ErrRateLimited) {
+				client.Send(map[string]string{"type": "message.error", "error": "Слишком много сообщений. Подождите пару секунд."})
+				continue
+			}
+			if err != nil {
+				log.Printf("create msg user=%s: %v", userID, err)
+				client.Send(map[string]string{"type": "message.error", "error": err.Error()})
+				continue
+			}
+			h.broadcast(roomID, map[string]any{
+				"type": "message.created",
+				"data": message,
+			})
+
+		case "message.history":
+			history, err := h.handlerMsg.History(ctx, roomID, event.Data)
+			if err != nil {
+				log.Printf("history user=%s: %v", userID, err)
+				client.Send(map[string]string{"type": "message.error", "error": "failed to load history"})
+				continue
+			}
+			client.Send(map[string]any{
+				"type": "message.history",
+				"data": history,
+			})
+
+		default:
+			client.Send(map[string]string{"type": "message.error", "error": "unknown event type"})
+		}
 	}
+}
+func (h *Handler) broadcast(roomID string, payload any) {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	for _, client := range h.rooms[roomID] {
+		if err := client.Send(payload); err != nil {
+			log.Printf("broadcast to %s: %v", client.UserId, err)
+		}
+	}
+}
+
+func (c *Client) Send(payload any) error {
+	c.writeMu.Lock()
+	defer c.writeMu.Unlock()
+
+	c.Conn.SetWriteDeadline(time.Now().Add(5 * time.Second))
+	return c.Conn.WriteJSON(payload)
 }

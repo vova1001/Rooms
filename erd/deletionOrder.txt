@@ -1,9 +1,0 @@
-avatars
-room_users
-notifications
-messages
-event_schedules
-bookings
-rooms
-events
-users

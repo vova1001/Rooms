@@ -12,6 +12,7 @@ import { RoomEvent, Track } from 'livekit-client';
 import {
   LogOut,
   Maximize2,
+  MessageSquare,
   Mic,
   MicOff,
   Minimize2,
@@ -35,6 +36,7 @@ import {
 import { createPortal } from 'react-dom';
 import useScreenShareStats from '../hooks/useScreenShareStats';
 import Avatar from './Avatar';
+import ChatPanel from './ChatPanel';
 
 const VOLUME_MAX = 200;
 
@@ -446,8 +448,34 @@ function ParticipantTile({
   );
 }
 
-function RoomInterior({ room, user, onLeave }) {
+function RoomInterior({ room, user, chat, onLeave }) {
   const participants = useParticipants();
+
+  // --- чат ---
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  // Время последнего сообщения, которое пользователь уже видел.
+  const [lastReadAt, setLastReadAt] = useState(0);
+  const lastMessage = chat.messages[chat.messages.length - 1];
+  const lastMessageAt = lastMessage ? new Date(lastMessage.created_at).getTime() : 0;
+
+  useEffect(() => {
+    if (isChatOpen) setLastReadAt(lastMessageAt);
+  }, [isChatOpen, lastMessageAt]);
+
+  // Первая история при входе — считаем прочитанной, бейдж только для новых.
+  const historyLoadedRef = useRef(false);
+  useEffect(() => {
+    if (!historyLoadedRef.current && lastMessageAt) {
+      historyLoadedRef.current = true;
+      setLastReadAt(lastMessageAt);
+    }
+  }, [lastMessageAt]);
+
+  const unreadCount = isChatOpen
+    ? 0
+    : chat.messages.filter(
+        (msg) => msg.user_id !== user.id && new Date(msg.created_at).getTime() > lastReadAt,
+      ).length;
   const livekitRoom = useRoomContext();
   const { isMicrophoneEnabled, isScreenShareEnabled, localParticipant } = useLocalParticipant();
 
@@ -640,15 +668,37 @@ function RoomInterior({ room, user, onLeave }) {
           <h1>{room.name}</h1>
         </div>
 
-        <button
-          className="secondary-button danger"
-          onClick={onLeave}
-          type="button"
-        >
-          <LogOut size={17} />
-          Выйти
-        </button>
+        <div className="room-header-actions">
+          <button
+            className={`secondary-button chat-toggle ${isChatOpen ? 'is-active' : ''}`}
+            onClick={() => setIsChatOpen((value) => !value)}
+            type="button"
+            aria-label="Чат комнаты"
+          >
+            <MessageSquare size={17} />
+            Чат
+            {unreadCount > 0 && (
+              <span className="chat-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
+            )}
+          </button>
+
+          <button
+            className="secondary-button danger"
+            onClick={onLeave}
+            type="button"
+          >
+            <LogOut size={17} />
+            Выйти
+          </button>
+        </div>
       </header>
+
+      <ChatPanel
+        chat={chat}
+        user={user}
+        open={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+      />
 
       <main
         className={`stage ${
@@ -900,6 +950,7 @@ export default function RoomExperience({
   room,
   user,
   connection,
+  chat,
   onLeave,
 }) {
   return (
@@ -916,6 +967,7 @@ export default function RoomExperience({
       <RoomInterior
         room={room}
         user={user}
+        chat={chat}
         onLeave={onLeave}
       />
     </LiveKitRoom>
