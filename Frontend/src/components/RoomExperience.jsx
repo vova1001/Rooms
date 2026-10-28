@@ -4,6 +4,7 @@ import {
   TrackToggle,
   VideoTrack,
   useLocalParticipant,
+  useParticipantInfo,
   useParticipants,
   useRoomContext,
   useTracks,
@@ -39,6 +40,18 @@ import Avatar from './Avatar';
 import ChatPanel from './ChatPanel';
 
 const VOLUME_MAX = 200;
+
+// Gateway кладёт в токен LiveKit metadata вида {"avatar": "..."}.
+// Разбираем аккуратно: у старых токенов metadata может не быть вовсе.
+function parseParticipantMetadata(metadata) {
+  if (!metadata) return {};
+  try {
+    const data = JSON.parse(metadata);
+    return data && typeof data === 'object' ? data : {};
+  } catch {
+    return {};
+  }
+}
 
 // Safari (в т.ч. десктопный) и некоторые старые мобильные браузеры до сих
 // пор требуют префиксованные версии Fullscreen API.
@@ -283,6 +296,7 @@ function VolumeSlider({ value, onChange, label }) {
 function ParticipantTile({
   participant,
   isSelf,
+  selfAvatar,
   isBeingViewed,
   onSelectDemo,
   screenAudioTrack,
@@ -336,7 +350,10 @@ function ParticipantTile({
     setMenuOpen((prev) => !prev);
   };
 
+  // useParticipantInfo перерисует плитку, если metadata участника изменится.
+  const { metadata } = useParticipantInfo({ participant });
   const displayName = participant.name || participant.identity;
+  const avatar = parseParticipantMetadata(metadata).avatar || (isSelf ? selfAvatar : '');
 
   const statusText = isSelf
     ? 'Это вы'
@@ -352,7 +369,7 @@ function ParticipantTile({
         participant.isSpeaking ? 'speaking' : ''
       }`}
     >
-      <Avatar name={displayName} size="lg" />
+      <Avatar name={displayName} src={avatar} size="lg" />
 
       <div>
         <strong>{displayName}</strong>
@@ -823,6 +840,7 @@ function RoomInterior({ room, user, chat, onLeave }) {
                 key={participant.identity}
                 participant={participant}
                 isSelf={participant.identity === user.id}
+                selfAvatar={user.avatar}
                 isBeingViewed={
                   isViewingScreenShare &&
                   activeTrack?.participant.identity === participant.identity

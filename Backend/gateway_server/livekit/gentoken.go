@@ -1,6 +1,7 @@
 package livekit
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/livekit/protocol/auth"
@@ -25,10 +26,15 @@ func NewTokenService(url, apiKey, apiSecret string) *TokenService {
 	}
 }
 
-func (s *TokenService) CreateConnectionData(roomId, userId, userName string) (*ConnectionData, error) {
+func (s *TokenService) CreateConnectionData(roomId, userId, userName, avatar string) (*ConnectionData, error) {
 	accsessToken := auth.NewAccessToken(s.apiKey, s.apiSecret)
 	accsessToken.SetIdentity(userId)
 	accsessToken.SetName(userName)
+	metadata, err := json.Marshal(map[string]string{"avatar": avatar})
+	if err != nil {
+		return nil, fmt.Errorf("marshal participant metadata: %w", err)
+	}
+	accsessToken.SetMetadata(string(metadata))
 	grant := &auth.VideoGrant{
 		RoomJoin: true,
 		Room:     roomId,

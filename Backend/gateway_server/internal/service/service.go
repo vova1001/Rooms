@@ -43,7 +43,7 @@ func (s Service) Join(ctx context.Context, roomId string, user *m.User) (*JoinRe
 		return nil, fmt.Errorf("Error into repoPart addUser:%w", err)
 	}
 
-	res, err := s.LKS.CreateConnectionData(roomId, user.Id, user.UserName)
+	res, err := s.LKS.CreateConnectionData(roomId, user.Id, user.UserName, user.Avatar)
 	if err != nil {
 		return nil, fmt.Errorf("err create connection LKS: %w", err)
 	}
