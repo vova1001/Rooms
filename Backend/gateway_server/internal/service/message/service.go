@@ -13,23 +13,14 @@ type Repository interface {
 }
 
 type Service struct {
-	repo    Repository
-	limiter RateLimiter
+	repo Repository
 }
 
-func NewService(repo Repository, limiter RateLimiter) *Service {
-	return &Service{repo: repo, limiter: limiter}
+func NewService(repo Repository) *Service {
+	return &Service{repo: repo}
 }
 
 func (s *Service) CreateMessage(ctx context.Context, roomID, userID, userName, avatar, text string) (*m.Message, error) {
-	allowed, err := s.limiter.Allow(ctx, messageRateKey(userID), messageRateLimit, messageRateWindow)
-	if err != nil {
-		return nil, fmt.Errorf("check message rate limit: %w", err)
-	}
-	if !allowed {
-		return nil, ErrRateLimited
-	}
-
 	msg := &m.Message{
 		RoomID:    roomID,
 		UserID:    userID,

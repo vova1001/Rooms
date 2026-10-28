@@ -3,14 +3,12 @@ package handlers
 import (
 	hm "backend/gateway_server/internal/handlers/message"
 	s "backend/gateway_server/internal/service"
-	smsg "backend/gateway_server/internal/service/message"
 	m "backend/gateway_server/models"
 	sharedGetAuthS "backend/shared/getAuthSession"
 	sharedRepoUsers "backend/shared/users"
 
 	"context"
 	"encoding/json"
-	"errors"
 	"log"
 	"net/http"
 	"sync"
@@ -195,10 +193,6 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		switch event.Type {
 		case "message.create":
 			message, err := h.handlerMsg.Create(ctx, roomID, userID, user.UserName, user.Avatar, event.Data)
-			if errors.Is(err, smsg.ErrRateLimited) {
-				client.Send(map[string]string{"type": "message.error", "error": "Слишком много сообщений. Подождите пару секунд."})
-				continue
-			}
 			if err != nil {
 				log.Printf("create msg user=%s: %v", userID, err)
 				client.Send(map[string]string{"type": "message.error", "error": err.Error()})
