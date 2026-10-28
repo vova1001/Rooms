@@ -2,10 +2,9 @@ import { Plus, RefreshCw, Search } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createRoom, getRooms } from '../api/http';
-import Avatar from '../components/Avatar';
 import CreateRoomPanel from '../components/CreateRoomPanel';
-import Logo from '../components/Logo';
 import RoomCard from '../components/RoomCard';
+import Sidebar from '../components/Sidebar';
 import { getStoredUser } from '../utils/session';
 import { normalizeRoom } from '../utils/rooms';
 
@@ -75,15 +74,7 @@ export default function HomePage({ refreshSession }) {
 
   return (
     <div className="app-shell">
-      <aside className="sidebar">
-        <Logo />
-        <div className="sidebar-spacer" />
-        <div className="profile-block">
-          <Avatar name={user?.username} src={user?.avatar} />
-          <div><strong>{user?.username || 'Пользователь'}</strong><span>В сети</span></div>
-        </div>
-        <div className="session-note">Вход защищён серверной сессией</div>
-      </aside>
+      <Sidebar />
 
       <main className="home-main">
         <header className="home-header">

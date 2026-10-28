@@ -5,6 +5,7 @@ import Logo from './components/Logo';
 import AuthPage from './pages/AuthPage';
 import CreateUserPage from './pages/CreateUserPage';
 import HomePage from './pages/HomePage';
+import ProfilePage from './pages/ProfilePage';
 import RoomPage from './pages/RoomPage';
 import { clearUser, saveUser } from './utils/session';
 
@@ -79,6 +80,14 @@ export default function App() {
         element={
           <ProtectedRoute session={session}>
             <HomePage refreshSession={refreshSession} />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute session={session}>
+            <ProfilePage refreshSession={refreshSession} />
           </ProtectedRoute>
         }
       />

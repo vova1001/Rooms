@@ -86,6 +86,10 @@ export function completeProfile(username, avatar) {
   });
 }
 
+export function getProfile() {
+  return request('/profile');
+}
+
 export function getRooms() {
   return request('/rooms');
 }
