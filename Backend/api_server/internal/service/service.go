@@ -135,6 +135,14 @@ func (s *PartService) VerifyCode(ctx context.Context, email, code string) (*m.Ve
 		return nil, fmt.Errorf("err get old hash:%w", err)
 	}
 
+	allowed, err := s.repo.AllowVerifyByEmail(ctx, normEmail)
+	if err != nil {
+		return nil, fmt.Errorf("verify rate limit: %w", err)
+	}
+	if !allowed {
+		return nil, fmt.Errorf("TooManyVerifyAttempts")
+	}
+
 	if !s.otp.Verify(normEmail, code, hash) {
 		return nil, fmt.Errorf("err verify code:%w", err)
 	}

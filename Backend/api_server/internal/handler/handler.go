@@ -15,7 +15,6 @@ import (
 	sharedRepoUsers "backend/shared/users"
 
 	"github.com/google/uuid"
-	"github.com/gorilla/mux"
 )
 
 type PartHandler struct {
@@ -105,16 +104,13 @@ func (h *PartHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "room name is required", http.StatusBadRequest)
 		return
 	}
-	ownerIDStr := r.Header.Get("X-User-ID")
-	if ownerIDStr == "" {
-		http.Error(w, "X-User-ID header required", http.StatusBadRequest)
+
+	ownerID, ok := r.Context().Value(UserIDContextKey).(uuid.UUID)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
-	ownerID, err := uuid.Parse(ownerIDStr)
-	if err != nil {
-		http.Error(w, "invalid user id", http.StatusBadRequest)
-		return
-	}
+
 	room, err := h.service.CreateRoom(r.Context(), req.Name, ownerID)
 	if err != nil {
 		if strings.Contains(err.Error(), "foreign key constraint") {
@@ -157,8 +153,7 @@ func (h *PartHandler) GetAllRooms(w http.ResponseWriter, r *http.Request) {
 	_ = json.NewEncoder(w).Encode(resp)
 }
 func (h *PartHandler) GetRoomUsers(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	roomIDStr := vars["id"]
+	roomIDStr := r.PathValue("id")
 	roomID, err := uuid.Parse(roomIDStr)
 	if err != nil {
 		http.Error(w, "invalid room id", http.StatusBadRequest)

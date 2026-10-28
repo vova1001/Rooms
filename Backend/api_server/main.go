@@ -61,7 +61,7 @@ func main() {
 		Password: cfgRDB.RedisPass,
 	})
 
-	repository := repo.NewRepo(dbConn, rdb)
+	repository := repo.NewRepo(dbConn, rdb, cfgOTP.Secret)
 
 	generator := otp.NewGenerator()
 	hasher := otp.NewCodeHasher(cfgOTP.Secret)

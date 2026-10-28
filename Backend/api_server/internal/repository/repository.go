@@ -15,12 +15,13 @@ import (
 )
 
 type PartRepo struct {
-	db  *sql.DB
-	rdb *redis.Client
+	db        *sql.DB
+	rdb       *redis.Client
+	keySecret string
 }
 
-func NewRepo(db *sql.DB, rdb *redis.Client) *PartRepo {
-	return &PartRepo{db: db, rdb: rdb}
+func NewRepo(db *sql.DB, rdb *redis.Client, keySecret string) *PartRepo {
+	return &PartRepo{db: db, rdb: rdb, keySecret: keySecret}
 }
 
 type UserRepository interface {
