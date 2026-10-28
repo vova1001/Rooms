@@ -35,6 +35,7 @@ func (h *PartHandler) RegisterRoutes(r *http.ServeMux) {
 	r.Handle("GET /rooms", h.MiddlAuth(http.HandlerFunc(h.GetAllRooms)))
 	r.Handle("POST /create-rooms", h.MiddlAuth(http.HandlerFunc(h.CreateRoom)))
 	r.Handle("GET /rooms/{id}/users", h.MiddlAuth(http.HandlerFunc(h.GetRoomUsers)))
+	r.Handle("GET /profile", h.MiddlAuth(http.HandlerFunc(h.Profile)))
 	r.HandleFunc("POST /avatars/unlock", h.UnlockAvatars)
 	r.HandleFunc("POST /auth/email/send-code", h.SendCode)
 	r.HandleFunc("POST /auth/email/verify-code", h.VerifyCode)
@@ -42,6 +43,27 @@ func (h *PartHandler) RegisterRoutes(r *http.ServeMux) {
 	r.HandleFunc("POST /create-user", h.CreateUser)
 	r.HandleFunc("GET /avatars", h.GetAvatars)
 	r.HandleFunc("GET /hi", h.Hi)
+
+}
+
+func (h *PartHandler) Profile(w http.ResponseWriter, r *http.Request) {
+	userId, ok := r.Context().Value(UserIDContextKey).(uuid.UUID)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	profile, err := h.service.GetProfile(r.Context(), userId)
+	if err != nil {
+		http.Error(w, "err get profile", 500)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err = json.NewEncoder(w).Encode(profile); err != nil {
+		log.Printf("encode profile: %v", err)
+		return
+	}
 
 }
 

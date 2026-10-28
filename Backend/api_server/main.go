@@ -87,6 +87,8 @@ func main() {
 		repository,
 		sender,
 		serviceSession,
+		repository,
+		sharedRepoUsers,
 	)
 
 	handler := han.NewHandler(service, sharedAuthReader, sharedRepoUsers)

@@ -12,20 +12,23 @@ import (
 	"backend/api_server/internal/service/otp"
 	"backend/api_server/internal/service/session"
 	m "backend/api_server/model"
+	sharedRepoUsers "backend/shared/users"
 
 	"github.com/google/uuid"
 )
 
 type PartService struct {
-	repo     *repo.PartRepo
-	otp      *otp.Service
-	otpRepo  otp.OTPRepository
-	sender   email.Sender
-	sessions *session.Service
+	sharedRepoUsers *sharedRepoUsers.RepositoryUser
+	repo            *repo.PartRepo
+	otp             *otp.Service
+	otpRepo         otp.OTPRepository
+	sender          email.Sender
+	sessions        *session.Service
+	limmiter        RateLimiter
 }
 
-func NewService(repo *repo.PartRepo, otp *otp.Service, otpRepo otp.OTPRepository, sender email.Sender, sessions *session.Service) *PartService {
-	return &PartService{repo: repo, otpRepo: otpRepo, sender: sender, otp: otp, sessions: sessions}
+func NewService(repo *repo.PartRepo, otp *otp.Service, otpRepo otp.OTPRepository, sender email.Sender, sessions *session.Service, limiter RateLimiter, sharedRepoUsers *sharedRepoUsers.RepositoryUser) *PartService {
+	return &PartService{repo: repo, otpRepo: otpRepo, sender: sender, otp: otp, sessions: sessions, limmiter: limiter, sharedRepoUsers: sharedRepoUsers}
 }
 
 func (s *PartService) CreateUser(ctx context.Context, username, email, avatar string) (*m.User, error) {
@@ -85,7 +88,7 @@ func (s *PartService) SendCodeFromEmail(ctx context.Context, sec m.SendEmailCode
 		return fmt.Errorf("err validate email: %w", err)
 	}
 
-	allowedIp, err := s.repo.AllowByIp(ctx, sec.IP)
+	allowedIp, err := s.limmiter.AllowByIp(ctx, sec.IP)
 	if err != nil {
 		return fmt.Errorf("err limit Ip:%w", err)
 	}
@@ -94,7 +97,7 @@ func (s *PartService) SendCodeFromEmail(ctx context.Context, sec m.SendEmailCode
 		return fmt.Errorf("TooManyRequestIp")
 	}
 
-	allowedEmail, err := s.repo.AllowByEmail(ctx, email)
+	allowedEmail, err := s.limmiter.AllowByEmail(ctx, email)
 	if err != nil {
 		return fmt.Errorf("err limit Emailt:%w", err)
 	}
@@ -135,7 +138,7 @@ func (s *PartService) VerifyCode(ctx context.Context, email, code string) (*m.Ve
 		return nil, fmt.Errorf("err get old hash:%w", err)
 	}
 
-	allowed, err := s.repo.AllowVerifyByEmail(ctx, normEmail)
+	allowed, err := s.limmiter.AllowVerifyByEmail(ctx, normEmail)
 	if err != nil {
 		return nil, fmt.Errorf("verify rate limit: %w", err)
 	}
@@ -203,4 +206,12 @@ func (s *PartService) GetAvatars(ctx context.Context) ([]repo.Avatars, error) {
 	}
 
 	return avatars, nil
+}
+
+func (s *PartService) GetProfile(ctx context.Context, userId uuid.UUID) (m.Profile, error) {
+	profile, err := s.repo.GetProfile(ctx, userId)
+	if err != nil {
+		return m.Profile{}, fmt.Errorf("get profile: %w", err)
+	}
+	return profile, nil
 }

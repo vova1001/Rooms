@@ -38,16 +38,34 @@ type RoomRepository interface {
 
 // CreateUser
 func (r *PartRepo) CreateUser(ctx context.Context, username, email, avatar string) (*m.User, error) {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
 	id := uuid.New()
-	query := `INSERT INTO users (id, username, email, avatar, created_at) VALUES ($1, $2, $3, $4, NOW()) RETURNING created_at`
 	var createdAt time.Time
-	err := r.db.QueryRowContext(ctx, query, id, username, email, avatar).Scan(&createdAt)
+
+	err = tx.QueryRowContext(ctx, `INSERT INTO users (id, username, email, avatar, created_at)
+	 VALUES ($1, $2, $3, $4, NOW()) RETURNING created_at`, id, username, email, avatar).Scan(&createdAt)
+
 	if err != nil {
 		if errors.Is(err, context.Canceled) {
 			return nil, fmt.Errorf("CreateUser cancelled by context: %w", err)
 		}
 		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
+
+	_, err = tx.ExecContext(ctx, `INSERT INTO profiles (user_id) VALUES ($1)`, id)
+	if err != nil {
+		return nil, fmt.Errorf("insert profile: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("commit: %w", err)
+	}
+
 	return &m.User{
 		ID:        id,
 		Username:  username,
@@ -55,23 +73,6 @@ func (r *PartRepo) CreateUser(ctx context.Context, username, email, avatar strin
 		Avatar:    avatar,
 		CreatedAt: createdAt,
 	}, nil
-}
-
-// GetUserByID
-func (r *PartRepo) GetUserByID(ctx context.Context, id uuid.UUID) (*m.User, error) {
-	query := `SELECT id, username, created_at, avatar, email FROM users WHERE id = $1`
-	var u m.User
-	err := r.db.QueryRowContext(ctx, query, id).Scan(&u.ID, &u.Username, &u.CreatedAt, &u.Avatar, &u.Email)
-	if err != nil {
-		if errors.Is(err, context.Canceled) {
-			return nil, fmt.Errorf("GetUserByID cancelled: %w", err)
-		}
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, fmt.Errorf("user not found: %s", id)
-		}
-		return nil, fmt.Errorf("failed to get user by id %s: %w", id, err)
-	}
-	return &u, nil
 }
 
 // CreateRoom
