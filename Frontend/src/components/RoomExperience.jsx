@@ -678,7 +678,7 @@ function RoomInterior({ room, user, chat, onLeave }) {
   };
 
   return (
-    <div className="room-space">
+    <div className={`room-space ${isChatOpen ? 'chat-open' : ''}`}>
       <header className="room-header">
         <div>
           <span className="eyebrow">Голосовая комната</span>
@@ -715,6 +715,8 @@ function RoomInterior({ room, user, chat, onLeave }) {
         user={user}
         open={isChatOpen}
         onClose={() => setIsChatOpen(false)}
+        title={room.name}
+        online={participants.length}
       />
 
       <main

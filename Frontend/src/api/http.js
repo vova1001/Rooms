@@ -90,6 +90,14 @@ export function getProfile() {
   return request('/profile');
 }
 
+// Отправляет только изменённые поля: { username?, bio? }
+export function updateProfile(fields) {
+  return request('/profile', {
+    method: 'PATCH',
+    body: JSON.stringify(fields),
+  });
+}
+
 export function getRooms() {
   return request('/rooms');
 }
