@@ -7,9 +7,13 @@ import RoomCard from '../components/RoomCard';
 import Sidebar from '../components/Sidebar';
 import { getStoredUser } from '../utils/session';
 import { normalizeRoom } from '../utils/rooms';
+import { useSearchParams } from 'react-router-dom';
+import EventsPanel from '../components/EventsPanel';
 
 export default function HomePage({ refreshSession }) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const eventsOpen = searchParams.get('tab') === 'events';
   const user = getStoredUser();
   const [rooms, setRooms] = useState([]);
   const [query, setQuery] = useState('');
@@ -79,14 +83,15 @@ export default function HomePage({ refreshSession }) {
       <main className="home-main">
         <header className="home-header">
           <div>
-            <span className="eyebrow">Открытые комнаты</span>
-            <h1>Куда зайдём?</h1>
+            <span className="eyebrow">{eventsOpen ? 'Календарь встреч' : 'Открытые комнаты'}</span>
+            <h1>{eventsOpen ? 'Что в планах?' : 'Куда зайдём?'}</h1>
           </div>
-          <button className="primary-button" onClick={() => setPanelOpen(true)} type="button">
+          {!eventsOpen && <button className="primary-button" onClick={() => setPanelOpen(true)} type="button">
             <Plus size={18} /> Создать комнату
-          </button>
+          </button>}
         </header>
 
+        {eventsOpen ? <EventsPanel refreshSession={refreshSession} /> : <>
         <section className="toolbar">
           <label className="search-box">
             <Search size={19} />
@@ -114,6 +119,7 @@ export default function HomePage({ refreshSession }) {
             {!query && <button className="secondary-button" onClick={() => setPanelOpen(true)} type="button">Создать комнату</button>}
           </div>
         )}
+        </>}
       </main>
 
       <CreateRoomPanel open={panelOpen} onClose={() => setPanelOpen(false)} onSubmit={handleCreate} loading={creating} />

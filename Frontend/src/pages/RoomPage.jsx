@@ -7,7 +7,7 @@ import { useGatewayJoin } from '../hooks/useGatewayJoin';
 import { getStoredUser } from '../utils/session';
 import { normalizeRoom } from '../utils/rooms';
 
-export default function RoomPage() {
+export default function RoomPage({ refreshSession }) {
   const { roomId } = useParams();
   const navigate = useNavigate();
   const user = getStoredUser();
@@ -24,7 +24,7 @@ export default function RoomPage() {
   const leave = () => navigate('/');
 
   if (connection) {
-    return <RoomExperience room={room} user={user} connection={connection} chat={chat} onLeave={leave} />;
+    return <RoomExperience room={room} user={user} connection={connection} chat={chat} onLeave={leave} refreshSession={refreshSession} />;
   }
 
   return (

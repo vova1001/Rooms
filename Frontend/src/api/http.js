@@ -16,6 +16,7 @@ export class ApiError extends Error {
 }
 
 async function request(path, options = {}) {
+
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     credentials: 'include',
@@ -100,6 +101,20 @@ export function updateProfile(fields) {
 
 export function getRooms() {
   return request('/rooms');
+}
+
+export async function getEvents(date, timeZone, roomId) {
+  const params = new URLSearchParams({ date, time_zone: timeZone, limit: '100' });
+  if (roomId) params.set('room_id', roomId);
+  const items = [];
+  let cursor;
+  do {
+    if (cursor) params.set('cursor', cursor);
+    const page = await request(`/events?${params}`);
+    items.push(...page.items);
+    cursor = page.next_cursor;
+  } while (cursor);
+  return { items, next_cursor: null };
 }
 
 export function createRoom(name, userId) {

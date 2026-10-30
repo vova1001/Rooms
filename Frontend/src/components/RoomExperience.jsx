@@ -38,6 +38,7 @@ import { createPortal } from 'react-dom';
 import useScreenShareStats from '../hooks/useScreenShareStats';
 import Avatar from './Avatar';
 import ChatPanel from './ChatPanel';
+import RoomEvents from './RoomEvents';
 
 const VOLUME_MAX = 200;
 
@@ -465,7 +466,8 @@ function ParticipantTile({
   );
 }
 
-function RoomInterior({ room, user, chat, onLeave }) {
+function RoomInterior({ room, user, chat, onLeave, refreshSession }) {
+  const [eventsOpen, setEventsOpen] = useState(false);
   const participants = useParticipants();
 
   // --- чат ---
@@ -678,7 +680,7 @@ function RoomInterior({ room, user, chat, onLeave }) {
   };
 
   return (
-    <div className={`room-space ${isChatOpen ? 'chat-open' : ''}`}>
+    <div className={`room-space room-with-events ${isChatOpen && !eventsOpen ? 'chat-open' : ''}`}>
       <header className="room-header">
         <div>
           <span className="eyebrow">Голосовая комната</span>
@@ -688,7 +690,7 @@ function RoomInterior({ room, user, chat, onLeave }) {
         <div className="room-header-actions">
           <button
             className={`secondary-button chat-toggle ${isChatOpen ? 'is-active' : ''}`}
-            onClick={() => setIsChatOpen((value) => !value)}
+            onClick={() => { setEventsOpen(false); setIsChatOpen((value) => !value); }}
             type="button"
             aria-label="Чат комнаты"
           >
@@ -710,16 +712,23 @@ function RoomInterior({ room, user, chat, onLeave }) {
         </div>
       </header>
 
+      <nav className="home-tabs room-tabs" aria-label="Разделы комнаты">
+        <button type="button" className={!eventsOpen ? 'is-active' : ''} aria-pressed={!eventsOpen} onClick={() => setEventsOpen(false)}>Голосовая комната</button>
+        <button type="button" className={eventsOpen ? 'is-active' : ''} aria-pressed={eventsOpen} onClick={() => { setEventsOpen(true); setIsChatOpen(false); }}>Мероприятия комнаты</button>
+      </nav>
+      {eventsOpen && <RoomEvents room={room} refreshSession={refreshSession} />}
+
       <ChatPanel
         chat={chat}
         user={user}
-        open={isChatOpen}
+        open={isChatOpen && !eventsOpen}
         onClose={() => setIsChatOpen(false)}
         title={room.name}
         online={participants.length}
       />
 
       <main
+        style={eventsOpen ? { display: 'none' } : undefined}
         className={`stage ${
           isViewingScreenShare ? 'stage-sharing' : ''
         }`}
@@ -972,6 +981,7 @@ export default function RoomExperience({
   connection,
   chat,
   onLeave,
+  refreshSession,
 }) {
   return (
     <LiveKitRoom
@@ -985,6 +995,7 @@ export default function RoomExperience({
       onDisconnected={onLeave}
     >
       <RoomInterior
+        refreshSession={refreshSession}
         room={room}
         user={user}
         chat={chat}

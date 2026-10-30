@@ -95,7 +95,7 @@ export default function App() {
         path="/rooms/:roomId"
         element={
           <ProtectedRoute session={session}>
-            <RoomPage />
+            <RoomPage refreshSession={refreshSession} />
           </ProtectedRoute>
         }
       />
