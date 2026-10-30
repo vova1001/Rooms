@@ -30,3 +30,39 @@ func (r *PartRepo) GetProfile(ctx context.Context, userID uuid.UUID) (m.Profile,
 	}
 	return p, nil
 }
+
+func (r *PartRepo) ChangeProfile(ctx context.Context, userId uuid.UUID, req m.UpdateProfileReq) error {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin tx:%w", err)
+	}
+	defer tx.Rollback()
+	res, err := tx.ExecContext(ctx, `
+		UPDATE users SET 
+			username = COALESCE($1, username),
+			updated_at = NOW()
+		WHERE id = $2`,
+		req.Username, userId)
+	if err != nil {
+		return fmt.Errorf("update user: %w", err)
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return ErrProfileNotFound
+	}
+
+	_, err = tx.ExecContext(ctx, `
+		UPDATE profiles SET
+			bio = COALESCE($1, bio),
+			updated_at = NOW()
+		WHERE user_id = $2`,
+		req.Bio, userId)
+
+	if err != nil {
+		return fmt.Errorf("update profile: %w", err)
+	}
+
+	if err = tx.Commit(); err != nil {
+		return fmt.Errorf("err commit: %w", err)
+	}
+	return nil
+}

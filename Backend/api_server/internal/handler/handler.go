@@ -36,6 +36,7 @@ func (h *PartHandler) RegisterRoutes(r *http.ServeMux) {
 	r.Handle("POST /create-rooms", h.MiddlAuth(http.HandlerFunc(h.CreateRoom)))
 	r.Handle("GET /rooms/{id}/users", h.MiddlAuth(http.HandlerFunc(h.GetRoomUsers)))
 	r.Handle("GET /profile", h.MiddlAuth(http.HandlerFunc(h.Profile)))
+	r.Handle("PATCH /profile", h.MiddlAuth(http.HandlerFunc(h.ChangeProfile)))
 	r.HandleFunc("POST /avatars/unlock", h.UnlockAvatars)
 	r.HandleFunc("POST /auth/email/send-code", h.SendCode)
 	r.HandleFunc("POST /auth/email/verify-code", h.VerifyCode)
@@ -43,6 +44,38 @@ func (h *PartHandler) RegisterRoutes(r *http.ServeMux) {
 	r.HandleFunc("POST /create-user", h.CreateUser)
 	r.HandleFunc("GET /avatars", h.GetAvatars)
 	r.HandleFunc("GET /hi", h.Hi)
+
+}
+
+func (h *PartHandler) ChangeProfile(w http.ResponseWriter, r *http.Request) {
+	var req m.UpdateProfileReq
+	userId, ok := r.Context().Value(UserIDContextKey).(uuid.UUID)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON", 400)
+		return
+	}
+
+	updatedProfile, err := h.service.UpdateProfile(r.Context(), userId, req)
+	if err != nil {
+		if errors.Is(err, service.ErrValidation) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		log.Printf("update profile: %v", err)
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err = json.NewEncoder(w).Encode(updatedProfile); err != nil {
+		log.Printf("encode profile: %v", err)
+		return
+	}
 
 }
 

@@ -15,6 +15,11 @@ type Profile struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type UpdateProfileReq struct {
+	Username *string
+	Bio      *string
+}
+
 type User struct {
 	ID        uuid.UUID `json:"id"`
 	Username  string    `json:"username"`

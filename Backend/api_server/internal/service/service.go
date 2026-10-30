@@ -4,7 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	repo "backend/api_server/internal/repository"
 	"backend/api_server/internal/service/email"
@@ -26,6 +29,8 @@ type PartService struct {
 	sessions        *session.Service
 	limmiter        RateLimiter
 }
+
+var ErrValidation = errors.New("validation error")
 
 func NewService(repo *repo.PartRepo, otp *otp.Service, otpRepo otp.OTPRepository, sender email.Sender, sessions *session.Service, limiter RateLimiter, sharedRepoUsers *sharedRepoUsers.RepositoryUser) *PartService {
 	return &PartService{repo: repo, otpRepo: otpRepo, sender: sender, otp: otp, sessions: sessions, limmiter: limiter, sharedRepoUsers: sharedRepoUsers}
@@ -214,4 +219,46 @@ func (s *PartService) GetProfile(ctx context.Context, userId uuid.UUID) (m.Profi
 		return m.Profile{}, fmt.Errorf("get profile: %w", err)
 	}
 	return profile, nil
+}
+
+func hasForbiddenRunes(s string, allowNewline bool) bool {
+	for _, r := range s {
+		if allowNewline && r == '\n' {
+			continue
+		}
+		if unicode.IsControl(r) || unicode.Is(unicode.Cf, r) {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *PartService) UpdateProfile(ctx context.Context, userId uuid.UUID, req m.UpdateProfileReq) (m.Profile, error) {
+	if req.Username != nil {
+		name := strings.TrimSpace(*req.Username)
+		if name == "" || utf8.RuneCountInString(name) > 50 {
+			return m.Profile{}, fmt.Errorf("%w: username must be 1-50 characters", ErrValidation)
+		}
+		if hasForbiddenRunes(name, false) {
+			return m.Profile{}, fmt.Errorf("%w: username contains invalid characters", ErrValidation)
+		}
+		req.Username = &name
+	}
+
+	if req.Bio != nil {
+		bio := strings.TrimSpace(*req.Bio)
+		if utf8.RuneCountInString(bio) > 500 {
+			return m.Profile{}, fmt.Errorf("%w: bio must be at most 500 characters", ErrValidation)
+		}
+		if hasForbiddenRunes(bio, true) {
+			return m.Profile{}, fmt.Errorf("%w: bio contains invalid characters", ErrValidation)
+		}
+		req.Bio = &bio
+	}
+
+	if err := s.repo.ChangeProfile(ctx, userId, req); err != nil {
+		return m.Profile{}, fmt.Errorf("Change profile: %w", err)
+	}
+
+	return s.repo.GetProfile(ctx, userId)
 }
