@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getProfile, updateProfile } from '../api/http';
 import Avatar from '../components/Avatar';
+import ProfileEvents from '../components/ProfileEvents';
 import Sidebar from '../components/Sidebar';
 import { getStoredUser, saveUser } from '../utils/session';
 
@@ -165,86 +166,90 @@ export default function ProfilePage({ refreshSession }) {
         )}
 
         {!loading && !error && profile && (
-          <section className="profile-card">
-            <div className="profile-cover" />
+          <div className="profile-layout">
+            <section className="profile-summary">
+              <div className="profile-cover" />
 
-            <div className="profile-hero">
-              <div className="profile-avatar-ring">
-                <Avatar name={profile.username || '?'} src={profile.avatar} size="xl" />
+              <div className="profile-hero">
+                <div className="profile-avatar-ring">
+                  <Avatar name={profile.username || '?'} src={profile.avatar} size="xl" />
+                </div>
+
+                {!editing && (
+                  <button className="secondary-button profile-edit-button" onClick={startEditing} type="button">
+                    <PencilLine size={16} /> Редактировать
+                  </button>
+                )}
               </div>
 
-              {!editing && (
-                <button className="secondary-button profile-edit-button" onClick={startEditing} type="button">
-                  <PencilLine size={16} /> Редактировать
-                </button>
-              )}
-            </div>
-
-            <div className="profile-hero-text">
-              <h2>{profile.username || 'Без имени'}</h2>
-              <div className="profile-meta-row">
-                <span className="profile-meta"><Mail size={14} /> {profile.email || '—'}</span>
-                <span className="profile-meta"><CalendarDays size={14} /> С нами с {formatDate(profile.created_at)}</span>
+              <div className="profile-hero-text">
+                <h2>{profile.username || 'Без имени'}</h2>
+                <div className="profile-meta-row">
+                  <span className="profile-meta"><Mail size={14} /> {profile.email || '—'}</span>
+                  <span className="profile-meta"><CalendarDays size={14} /> С нами с {formatDate(profile.created_at)}</span>
+                </div>
               </div>
-            </div>
 
-            {saved && <div className="profile-saved"><Check size={16} /> Изменения сохранены</div>}
+              {saved && <div className="profile-saved"><Check size={16} /> Изменения сохранены</div>}
 
-            {!editing ? (
-              <div className="profile-section">
-                <h3>О себе</h3>
-                {profile.bio
-                  ? <p className="profile-bio">{profile.bio}</p>
-                  : (
-                    <button className="profile-bio-empty" onClick={startEditing} type="button">
-                      Расскажите немного о себе — это увидят другие участники.
+              {!editing ? (
+                <div className="profile-section">
+                  <h3>О себе</h3>
+                  {profile.bio
+                    ? <p className="profile-bio">{profile.bio}</p>
+                    : (
+                      <button className="profile-bio-empty" onClick={startEditing} type="button">
+                        Расскажите немного о себе — это увидят другие участники.
+                      </button>
+                    )}
+                </div>
+              ) : (
+                <form className="profile-form" onSubmit={save} noValidate>
+                  <div className="profile-field">
+                    <div className="profile-field-head">
+                      <label htmlFor="profile-username">Имя</label>
+                      <span className={usernameLen > USERNAME_MAX ? 'is-over' : ''}>{usernameLen} / {USERNAME_MAX}</span>
+                    </div>
+                    <input
+                      id="profile-username"
+                      value={username}
+                      onChange={(event) => setUsername(event.target.value)}
+                      placeholder="Как вас называть"
+                      autoComplete="nickname"
+                      autoFocus
+                    />
+                  </div>
+
+                  <div className="profile-field">
+                    <div className="profile-field-head">
+                      <label htmlFor="profile-bio">О себе</label>
+                      <span className={bioLen > BIO_MAX ? 'is-over' : ''}>{bioLen} / {BIO_MAX}</span>
+                    </div>
+                    <textarea
+                      id="profile-bio"
+                      value={bio}
+                      onChange={(event) => setBio(event.target.value)}
+                      placeholder="Пара слов о себе, интересы, чем занимаетесь"
+                      rows={5}
+                    />
+                  </div>
+
+                  {formError && <div className="error-message">{formError}</div>}
+
+                  <div className="profile-form-actions">
+                    <button className="secondary-button" onClick={cancelEditing} type="button" disabled={saving}>
+                      <X size={16} /> Отмена
                     </button>
-                  )}
-              </div>
-            ) : (
-              <form className="profile-form" onSubmit={save} noValidate>
-                <div className="profile-field">
-                  <div className="profile-field-head">
-                    <label htmlFor="profile-username">Имя</label>
-                    <span className={usernameLen > USERNAME_MAX ? 'is-over' : ''}>{usernameLen} / {USERNAME_MAX}</span>
+                    <button className="primary-button" type="submit" disabled={saving}>
+                      <Check size={16} /> {saving ? 'Сохраняем…' : 'Сохранить'}
+                    </button>
                   </div>
-                  <input
-                    id="profile-username"
-                    value={username}
-                    onChange={(event) => setUsername(event.target.value)}
-                    placeholder="Как вас называть"
-                    autoComplete="nickname"
-                    autoFocus
-                  />
-                </div>
+                </form>
+              )}
+            </section>
 
-                <div className="profile-field">
-                  <div className="profile-field-head">
-                    <label htmlFor="profile-bio">О себе</label>
-                    <span className={bioLen > BIO_MAX ? 'is-over' : ''}>{bioLen} / {BIO_MAX}</span>
-                  </div>
-                  <textarea
-                    id="profile-bio"
-                    value={bio}
-                    onChange={(event) => setBio(event.target.value)}
-                    placeholder="Пара слов о себе, интересы, чем занимаетесь"
-                    rows={5}
-                  />
-                </div>
-
-                {formError && <div className="error-message">{formError}</div>}
-
-                <div className="profile-form-actions">
-                  <button className="secondary-button" onClick={cancelEditing} type="button" disabled={saving}>
-                    <X size={16} /> Отмена
-                  </button>
-                  <button className="primary-button" type="submit" disabled={saving}>
-                    <Check size={16} /> {saving ? 'Сохраняем…' : 'Сохранить'}
-                  </button>
-                </div>
-              </form>
-            )}
-          </section>
+            <ProfileEvents />
+          </div>
         )}
       </main>
     </div>

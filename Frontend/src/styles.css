@@ -59,12 +59,12 @@ button.profile-block { width: 100%; text-align: left; color: var(--text); font: 
 button.profile-block:hover, button.profile-block.active { border-color: rgba(166,255,98,.35); background: var(--panel-2); }
 .sidebar-logo { background: transparent; border: 0; padding: 0; color: inherit; cursor: pointer; align-self: flex-start; }
 .avatar-xl { width: 112px; height: 112px; font-size: 30px; border-width: 0; }
-.profile-main { max-width: 920px; }
+.home-main.profile-main { max-width: 860px; }
 .profile-back { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 26px; padding: 0; background: transparent; border: 0; color: var(--muted); cursor: pointer; }
 .profile-back:hover { color: var(--text); }
 .profile-error { display: grid; gap: 14px; justify-items: start; margin-top: 30px; }
 
-.profile-card { position: relative; margin-top: 34px; border-radius: 24px; background: var(--panel); border: 1px solid var(--border); overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.25); }
+.profile-summary { position: relative; border-radius: 24px; background: var(--panel); border: 1px solid var(--border); overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.25); }
 .profile-cover { height: 140px; background:
   radial-gradient(circle at 18% 30%, rgba(166,255,98,.35), transparent 42%),
   radial-gradient(circle at 82% 10%, rgba(98,200,255,.22), transparent 40%),
@@ -96,6 +96,39 @@ button.profile-block:hover, button.profile-block.active { border-color: rgba(166
 .profile-field textarea { width: 100%; min-height: 130px; resize: vertical; background: #0d1015; color: var(--text); border: 1px solid var(--border); border-radius: 13px; padding: 14px 15px; outline: none; font: inherit; font-size: 15px; line-height: 1.6; transition: .2s; }
 .profile-field input:focus, .profile-field textarea:focus { border-color: rgba(166,255,98,.45); }
 .profile-form-actions { display: flex; justify-content: flex-end; gap: 10px; }
+
+/* Карточка профиля и разделы (мероприятия и т.д.) — друг под другом, одной ширины */
+.profile-layout { display: grid; gap: 20px; margin-top: 34px; }
+
+.profile-panel { min-width: 0; padding: 28px; border-radius: 24px; background: var(--panel); border: 1px solid var(--border); }
+.profile-panel-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.profile-panel-head h2 { margin: 0; font-size: 24px; letter-spacing: -.03em; }
+.profile-panel-head p { margin: 6px 0 0; color: var(--muted); font-size: 14px; }
+.profile-tabs { display: flex; gap: 6px; margin-top: 22px; padding: 5px; border-radius: 15px; background: #0d1015; border: 1px solid var(--border); overflow-x: auto; }
+.profile-tab { flex: 1; min-width: max-content; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; border: 0; border-radius: 11px; background: transparent; color: var(--muted); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: .2s ease; }
+.profile-tab:hover { color: var(--text); }
+.profile-tab.is-active { background: var(--panel-2); color: var(--text); box-shadow: 0 0 0 1px var(--border); }
+.profile-tab-count { min-width: 22px; padding: 1px 7px; border-radius: 999px; background: #232933; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.profile-tab.is-active .profile-tab-count { background: rgba(166,255,98,.14); color: var(--accent); }
+.profile-panel-empty { min-height: 220px; display: grid; place-items: center; align-content: center; gap: 8px; text-align: center; color: var(--muted); font-size: 14px; padding: 30px 10px; }
+.profile-panel-empty .empty-icon { margin-bottom: 8px; }
+.profile-panel-empty strong { color: var(--text); font-size: 16px; }
+.profile-booking-list { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 10px; }
+.profile-booking { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px 18px; border-radius: 16px; background: #0d1015; border: 1px solid var(--border); }
+.profile-booking div { min-width: 0; display: grid; gap: 4px; }
+.profile-booking strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.profile-booking div span { color: var(--muted); font-size: 13px; }
+.profile-booking-status { flex: 0 0 auto; padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+.profile-booking-status.is-pending { background: rgba(255,200,80,.12); color: #ffd27a; }
+.profile-booking-status.is-confirmed { background: rgba(166,255,98,.12); color: var(--accent); }
+.profile-booking-status.is-rejected { background: rgba(255,114,114,.12); color: #ff9c9c; }
+
+@media (max-width: 640px) {
+  .profile-panel { padding: 20px; }
+  .profile-tabs { gap: 4px; padding: 4px; }
+  .profile-tab { min-width: 0; gap: 6px; padding: 9px 6px; font-size: 13px; }
+  .profile-tab svg { display: none; }
+}
 
 @media (max-width: 850px) {
   button.profile-block { width: auto; }
