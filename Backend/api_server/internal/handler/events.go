@@ -79,3 +79,47 @@ func (h *PartHandler) ListEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func (h *PartHandler) JoinEvent(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(UserIDContextKey).(uuid.UUID)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	eventID, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "invalid event id", http.StatusBadRequest)
+		return
+	}
+
+	booking, err := h.service.JoinEvent(r.Context(), eventID, userID)
+	if err != nil {
+		if errors.Is(err, repository.ErrEventNotFound) {
+			http.Error(w, "event not found", http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, repository.ErrEventStarted) {
+			http.Error(w, "event already started", http.StatusConflict)
+			return
+		}
+		if errors.Is(err, repository.ErrEventFull) {
+			http.Error(w, "no seats left", http.StatusConflict)
+			return
+		}
+		if errors.Is(err, repository.ErrAlreadyBooked) {
+			http.Error(w, "already booked", http.StatusConflict)
+			return
+		}
+		log.Printf("join event: %v", err)
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	if err = json.NewEncoder(w).Encode(booking); err != nil {
+		log.Printf("encode booking: %v", err)
+		return
+	}
+}

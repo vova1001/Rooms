@@ -17,9 +17,9 @@ func (r *PartRepo) CreateEvent(ctx context.Context, req m.CreateEventReq) (m.Eve
 
 	err := r.db.QueryRowContext(ctx, `
 		INSERT INTO events (room_id, creator_id, title, description, starts_at, ends_at, price_minor, capacity)
-		SELECT r.id, $2, $3, $4, $5, $6, $7, $8
-		FROM rooms r
-		WHERE r.id = $1 AND r.owner_id = $2
+		SELECT id, $2, $3, $4, $5, $6, $7, $8
+		FROM rooms
+		WHERE id = $1 AND owner_id = $2
 		RETURNING id, room_id, creator_id, title, description, starts_at, ends_at, price_minor, currency, capacity, status, created_at`,
 		req.RoomID, req.CreatorID, req.Title, req.Description, req.StartsAt, req.EndsAt, req.PriceMinor, req.Capacity,
 	).Scan(&ev.ID, &ev.RoomID, &ev.CreatorID, &ev.Title, &ev.Description,

@@ -131,3 +131,12 @@ type EventItem struct {
 	IsFull            bool      `json:"is_full"`
 	Room              EventRoom `json:"room"`
 }
+
+type Booking struct {
+	ID        uuid.UUID `json:"id"`
+	EventID   uuid.UUID `json:"event_id"`
+	UserID    uuid.UUID `json:"user_id"`
+	Status    string    `json:"status"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}

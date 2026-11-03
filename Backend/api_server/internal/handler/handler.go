@@ -38,6 +38,7 @@ func (h *PartHandler) RegisterRoutes(r *http.ServeMux) {
 	r.Handle("GET /profile", h.MiddlAuth(http.HandlerFunc(h.Profile)))
 	r.Handle("PATCH /profile", h.MiddlAuth(http.HandlerFunc(h.ChangeProfile)))
 	r.Handle("GET /events", h.MiddlAuth(http.HandlerFunc(h.ListEvents)))
+	r.Handle("POST /events/{id}/join", h.MiddlAuth(http.HandlerFunc(h.JoinEvent)))
 	r.Handle("POST /rooms/{id}/events", h.MiddlAuth(http.HandlerFunc(h.CreateEvent)))
 	r.Handle("PATCH /rooms/{id}/privacy", h.MiddlAuth(http.HandlerFunc(h.SetPrivacy)))
 	r.HandleFunc("POST /avatars/unlock", h.UnlockAvatars)

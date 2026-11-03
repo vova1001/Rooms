@@ -8,6 +8,8 @@ import (
 	"unicode/utf8"
 
 	m "backend/api_server/model"
+
+	"github.com/google/uuid"
 )
 
 func (s *PartService) CreateEvent(ctx context.Context, req m.CreateEventReq) (m.Event, error) {
@@ -66,4 +68,8 @@ func (s *PartService) ListEvents(ctx context.Context, date, timeZone string) ([]
 	dayEnd := dayStart.AddDate(0, 0, 1)
 
 	return s.repo.ListEvents(ctx, dayStart, dayEnd)
+}
+
+func (s *PartService) JoinEvent(ctx context.Context, eventID, userID uuid.UUID) (m.Booking, error) {
+	return s.repo.JoinEvent(ctx, eventID, userID)
 }

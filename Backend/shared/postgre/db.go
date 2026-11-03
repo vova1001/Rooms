@@ -142,16 +142,12 @@ func Migrate(db *sql.DB) error {
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS bookings(
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 			event_id UUID NOT NULL REFERENCES events(id) ON DELETE CASCADE,
-			start_at TIMESTAMPTZ NOT NULL,
-			end_at TIMESTAMPTZ NOT NULL,
-			status VARCHAR(20) NOT NULL DEFAULT 'confirmed',
+			user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			status VARCHAR(20) NOT NULL DEFAULT 'pending',
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-			EXCLUDE USING gist (
-				event_id WITH =,
-				tstzrange(start_at, end_at) WITH &&
-			) WHERE (status <> 'cancelled')
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+			UNIQUE (event_id, user_id)
 		)
 	`)
 	if err != nil {
