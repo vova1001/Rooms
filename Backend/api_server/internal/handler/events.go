@@ -123,3 +123,24 @@ func (h *PartHandler) JoinEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func (h *PartHandler) GetMyBookings(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(UserIDContextKey).(uuid.UUID)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	bookings, err := h.service.GetUserBookings(r.Context(), userID)
+	if err != nil {
+		log.Printf("get my bookings: %v", err)
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err = json.NewEncoder(w).Encode(bookings); err != nil {
+		log.Printf("encode bookings: %v", err)
+		return
+	}
+}

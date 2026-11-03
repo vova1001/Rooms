@@ -140,3 +140,9 @@ type Booking struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
+
+// MyBooking — заявка пользователя вместе с карточкой события (для профиля)
+type MyBooking struct {
+	Booking
+	Event EventItem `json:"event"`
+}

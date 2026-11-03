@@ -92,3 +92,44 @@ func (r *PartRepo) JoinEvent(ctx context.Context, eventID, userID uuid.UUID) (m.
 	}
 	return b, nil
 }
+
+func (r *PartRepo) GetUserBookings(ctx context.Context, userID uuid.UUID) ([]m.MyBooking, error) {
+	rows, err := r.db.QueryContext(ctx, `
+		SELECT b.id, b.event_id, b.user_id, b.status, b.created_at, b.updated_at,
+		       e.id, e.title, e.description, e.starts_at, e.ends_at,
+		       e.price_minor, e.currency, e.capacity,
+		       r.id, r.name, r.is_private,
+		       (SELECT COUNT(*) FROM bookings c WHERE c.event_id = e.id AND c.status = 'confirmed')
+		FROM bookings b
+		JOIN events e ON e.id = b.event_id
+		JOIN rooms r ON r.id = e.room_id
+		WHERE b.user_id = $1
+		ORDER BY b.created_at DESC`, userID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("get user bookings: %w", err)
+	}
+	defer rows.Close()
+
+	bookings := make([]m.MyBooking, 0)
+	for rows.Next() {
+		var b m.MyBooking
+		var isPrivate bool
+		if err := rows.Scan(&b.ID, &b.EventID, &b.UserID, &b.Status, &b.CreatedAt, &b.UpdatedAt,
+			&b.Event.ID, &b.Event.Title, &b.Event.Description, &b.Event.StartsAt, &b.Event.EndsAt,
+			&b.Event.PriceMinor, &b.Event.Currency, &b.Event.Capacity,
+			&b.Event.Room.ID, &b.Event.Room.Name, &isPrivate,
+			&b.Event.ParticipantsCount); err != nil {
+			return nil, fmt.Errorf("scan booking: %w", err)
+		}
+
+		b.Event.IsFree = b.Event.PriceMinor == 0
+		b.Event.IsFull = b.Event.Capacity > 0 && b.Event.ParticipantsCount >= b.Event.Capacity
+		b.Event.Room.Visibility = "open"
+		if isPrivate {
+			b.Event.Room.Visibility = "closed"
+		}
+		bookings = append(bookings, b)
+	}
+	return bookings, rows.Err()
+}

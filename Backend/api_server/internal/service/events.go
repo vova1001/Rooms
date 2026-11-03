@@ -73,3 +73,7 @@ func (s *PartService) ListEvents(ctx context.Context, date, timeZone string) ([]
 func (s *PartService) JoinEvent(ctx context.Context, eventID, userID uuid.UUID) (m.Booking, error) {
 	return s.repo.JoinEvent(ctx, eventID, userID)
 }
+
+func (s *PartService) GetUserBookings(ctx context.Context, userID uuid.UUID) ([]m.MyBooking, error) {
+	return s.repo.GetUserBookings(ctx, userID)
+}
