@@ -20,6 +20,13 @@ type UpdateProfileReq struct {
 	Bio      *string
 }
 
+type UpdateRoomPrivacyReq struct {
+	RoomID    uuid.UUID `json:"-"`
+	OwnerID   uuid.UUID `json:"-"`
+	IsPrivate bool      `json:"-"`
+	PassHash  *string   `json:"-"`
+}
+
 type User struct {
 	ID        uuid.UUID `json:"id"`
 	Username  string    `json:"username"`

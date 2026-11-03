@@ -48,6 +48,8 @@ func Migrate(db *sql.DB) error {
 			id UUID PRIMARY KEY,
 			name VARCHAR(100) NOT NULL,
 			owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			is_private BOOLEAN NOT NULL DEFAULT FALSE,
+			password_hash  TEXT,
 			created_at TIMESTAMPTZ DEFAULT NOW()
 		)
 	`)

@@ -117,7 +117,7 @@ services:
       CORS_ORIGIN: ${CORS_ORIGIN}
 
     ports:
-      - "8080:8080"
+      - "8090:8080"
 
     networks:
       - rooms-net

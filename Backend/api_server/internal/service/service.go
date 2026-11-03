@@ -18,6 +18,7 @@ import (
 	sharedRepoUsers "backend/shared/users"
 
 	"github.com/google/uuid"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type PartService struct {
@@ -261,4 +262,35 @@ func (s *PartService) UpdateProfile(ctx context.Context, userId uuid.UUID, req m
 	}
 
 	return s.repo.GetProfile(ctx, userId)
+}
+
+func preparePrivacy(isPrivate bool, password string) (*string, error) {
+	if !isPrivate {
+		return nil, nil
+	}
+	if utf8.RuneCountInString(password) < 4 {
+		return nil, fmt.Errorf("%w: password must be at least 4 characters", ErrValidation)
+	}
+	if len(password) > 72 {
+		return nil, fmt.Errorf("%w: password is too long", ErrValidation)
+	}
+	hush, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, fmt.Errorf("hash password: %w", err)
+	}
+	h := string(hush)
+	return &h, nil
+}
+
+func (s *PartService) SetRoomPrivacy(ctx context.Context, req m.UpdateRoomPrivacyReq) error {
+	password := ""
+	if req.PassHash != nil {
+		password = *req.PassHash
+	}
+	hash, err := preparePrivacy(req.IsPrivate, password)
+	if err != nil {
+		return err
+	}
+	req.PassHash = hash
+	return s.repo.UpdateRoomPrivacy(ctx, req)
 }

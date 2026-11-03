@@ -47,6 +47,46 @@ func (h *PartHandler) RegisterRoutes(r *http.ServeMux) {
 
 }
 
+func (h *PartHandler) SetPrivacy(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(UserIDContextKey).(uuid.UUID)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	roomID, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "invalid room id", http.StatusBadRequest)
+		return
+	}
+
+	var body struct {
+		IsPrivate bool   `json:"is_private"`
+		Password  string `json:"password"`
+	}
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<10)
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, "invalid json", http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.SetRoomPrivacy(r.Context(), m.UpdateRoomPrivacyReq{
+		RoomID:    roomID,
+		OwnerID:   userID,
+		IsPrivate: body.IsPrivate,
+		PassHash:  &body.Password,
+	})
+
+	switch {
+	case errors.Is(err, service.ErrValidation):
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	case err != nil:
+		http.Error(w, "internal error", http.StatusInternalServerError)
+	default:
+		w.WriteHeader(http.StatusNoContent)
+	}
+}
+
 func (h *PartHandler) ChangeProfile(w http.ResponseWriter, r *http.Request) {
 	var req m.UpdateProfileReq
 	userId, ok := r.Context().Value(UserIDContextKey).(uuid.UUID)

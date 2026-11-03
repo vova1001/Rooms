@@ -278,3 +278,19 @@ func (r *PartRepo) GetAvatars(ctx context.Context) ([]Avatars, error) {
 
 	return avatars, nil
 }
+
+func (r *PartRepo) UpdateRoomPrivacy(ctx context.Context, req m.UpdateRoomPrivacyReq) error {
+	res, err := r.db.ExecContext(ctx, `
+		UPDATE rooms SET
+			is_private = $1, 
+			password_hash = $2
+		WHERE id = $3 AND owner_id = $4
+	`, req.IsPrivate, req.PassHash, req.RoomID, req.OwnerID)
+	if err != nil {
+		return fmt.Errorf("update room privacy: %w", err)
+	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		return ErrProfileNotFound
+	}
+	return nil
+}
