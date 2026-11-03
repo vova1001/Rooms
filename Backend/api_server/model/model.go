@@ -92,6 +92,7 @@ type CreateEventReq struct {
 	EndsAt      time.Time `json:"ends_at"`
 	IsFree      bool      `json:"is_free"`
 	PriceMinor  int64     `json:"price_minor"`
+	Capacity    int       `json:"capacity"`
 }
 
 type Event struct {
@@ -105,6 +106,28 @@ type Event struct {
 	IsFree      bool      `json:"is_free"`
 	PriceMinor  int64     `json:"price_minor"`
 	Currency    string    `json:"currency"`
+	Capacity    int       `json:"capacity"`
 	Status      string    `json:"status"`
 	CreatedAt   time.Time `json:"created_at"`
+}
+
+type EventRoom struct {
+	ID         uuid.UUID `json:"id"`
+	Name       string    `json:"name"`
+	Visibility string    `json:"visibility"`
+}
+
+type EventItem struct {
+	ID                uuid.UUID `json:"id"`
+	Title             string    `json:"title"`
+	Description       string    `json:"description"`
+	StartsAt          time.Time `json:"starts_at"`
+	EndsAt            time.Time `json:"ends_at"`
+	IsFree            bool      `json:"is_free"`
+	PriceMinor        int64     `json:"price_minor"`
+	Currency          string    `json:"currency"`
+	Capacity          int       `json:"capacity"`
+	ParticipantsCount int       `json:"participants_count"`
+	IsFull            bool      `json:"is_full"`
+	Room              EventRoom `json:"room"`
 }

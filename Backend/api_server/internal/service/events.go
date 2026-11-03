@@ -39,8 +39,31 @@ func (s *PartService) CreateEvent(ctx context.Context, req m.CreateEventReq) (m.
 		return m.Event{}, fmt.Errorf("%w: price_minor must be between 1 and 100000000 for a paid event", ErrValidation)
 	}
 
+	if req.Capacity < 0 || req.Capacity > 1000 {
+		return m.Event{}, fmt.Errorf("%w: capacity must be between 0 and 1000 (0 = unlimited)", ErrValidation)
+	}
+
 	req.StartsAt = req.StartsAt.UTC()
 	req.EndsAt = req.EndsAt.UTC()
 
 	return s.repo.CreateEvent(ctx, req)
+}
+
+func (s *PartService) ListEvents(ctx context.Context, date, timeZone string) ([]m.EventItem, error) {
+	if timeZone == "" {
+		timeZone = "UTC"
+	}
+	loc, err := time.LoadLocation(timeZone)
+	if err != nil {
+		return nil, fmt.Errorf("%w: invalid time_zone", ErrValidation)
+	}
+
+	// начало выбранного дня по времени пользователя, например 2026-11-05 00:00 МСК
+	dayStart, err := time.ParseInLocation("2006-01-02", date, loc)
+	if err != nil {
+		return nil, fmt.Errorf("%w: date must be YYYY-MM-DD", ErrValidation)
+	}
+	dayEnd := dayStart.AddDate(0, 0, 1)
+
+	return s.repo.ListEvents(ctx, dayStart, dayEnd)
 }

@@ -57,3 +57,25 @@ func (h *PartHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func (h *PartHandler) ListEvents(w http.ResponseWriter, r *http.Request) {
+	q := r.URL.Query()
+
+	events, err := h.service.ListEvents(r.Context(), q.Get("date"), q.Get("time_zone"))
+	if err != nil {
+		if errors.Is(err, service.ErrValidation) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		log.Printf("list events: %v", err)
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	// фронт ждёт {items, next_cursor}; пагинации нет, поэтому next_cursor всегда null
+	if err = json.NewEncoder(w).Encode(map[string]any{"items": events, "next_cursor": nil}); err != nil {
+		log.Printf("encode events: %v", err)
+		return
+	}
+}

@@ -115,6 +115,7 @@ func Migrate(db *sql.DB) error {
 			ends_at TIMESTAMPTZ NOT NULL,
 			price_minor BIGINT NOT NULL DEFAULT 0,
 			currency CHAR(3) NOT NULL DEFAULT 'RUB',
+			capacity INT NOT NULL DEFAULT 0,
 			status VARCHAR(20) NOT NULL DEFAULT 'active',
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		)
