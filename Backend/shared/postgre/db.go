@@ -107,10 +107,14 @@ func Migrate(db *sql.DB) error {
 	_, err = db.Exec(`
 		CREATE TABLE IF NOT EXISTS events(
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			room_id UUID NOT NULL REFERENCES rooms(id) ON DELETE CASCADE,
+			creator_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 			title VARCHAR(200) NOT NULL,
-			description TEXT,
-			price NUMERIC(10,2) NOT NULL DEFAULT 0,
-			duration_minutes INT NOT NULL,
+			description TEXT NOT NULL DEFAULT '',
+			starts_at TIMESTAMPTZ NOT NULL,
+			ends_at TIMESTAMPTZ NOT NULL,
+			price_minor BIGINT NOT NULL DEFAULT 0,
+			currency CHAR(3) NOT NULL DEFAULT 'RUB',
 			status VARCHAR(20) NOT NULL DEFAULT 'active',
 			created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 		)

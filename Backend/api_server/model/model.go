@@ -82,3 +82,29 @@ type VerifyCodeResult struct {
 	Token            string
 	RequiresRegister bool
 }
+
+type CreateEventReq struct {
+	RoomID      uuid.UUID `json:"-"`
+	CreatorID   uuid.UUID `json:"-"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	StartsAt    time.Time `json:"starts_at"`
+	EndsAt      time.Time `json:"ends_at"`
+	IsFree      bool      `json:"is_free"`
+	PriceMinor  int64     `json:"price_minor"`
+}
+
+type Event struct {
+	ID          uuid.UUID `json:"id"`
+	RoomID      uuid.UUID `json:"room_id"`
+	CreatorID   uuid.UUID `json:"creator_id"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	StartsAt    time.Time `json:"starts_at"`
+	EndsAt      time.Time `json:"ends_at"`
+	IsFree      bool      `json:"is_free"`
+	PriceMinor  int64     `json:"price_minor"`
+	Currency    string    `json:"currency"`
+	Status      string    `json:"status"`
+	CreatedAt   time.Time `json:"created_at"`
+}
