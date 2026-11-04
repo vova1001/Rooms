@@ -80,7 +80,7 @@ func (r *PartRepo) ListEvents(ctx context.Context, dayStart, dayEnd time.Time, r
 	return events, rows.Err()
 }
 
-func (r *PartRepo) GetOwnerEvents(ctx context.Context, ownerID uuid.UUID) ([]m.OwnerEvent, error) {
+func (r *PartRepo) GetOwnerEvents(ctx context.Context, ownerID uuid.UUID, roomID uuid.NullUUID) ([]m.OwnerEvent, error) {
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT e.id, e.title, e.description, e.starts_at, e.ends_at,
 		       e.price_minor, e.currency, e.capacity, e.status,
@@ -89,7 +89,8 @@ func (r *PartRepo) GetOwnerEvents(ctx context.Context, ownerID uuid.UUID) ([]m.O
 		FROM events e
 		JOIN rooms r ON r.id = e.room_id
 		WHERE r.owner_id = $1
-		ORDER BY e.starts_at DESC`, ownerID,
+		  AND ($2::uuid IS NULL OR e.room_id = $2)
+		ORDER BY e.starts_at DESC`, ownerID, roomID,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("get owner events: %w", err)

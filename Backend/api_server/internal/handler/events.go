@@ -151,8 +151,12 @@ func (h *PartHandler) GetMyEvents(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	events, err := h.service.GetOwnerEvents(r.Context(), userID)
+	events, err := h.service.GetOwnerEvents(r.Context(), userID, r.URL.Query().Get("room_id"))
 	if err != nil {
+		if errors.Is(err, service.ErrValidation) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
 		log.Printf("get my events: %v", err)
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return

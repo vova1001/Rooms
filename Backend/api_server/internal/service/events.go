@@ -86,8 +86,16 @@ func (s *PartService) GetUserBookings(ctx context.Context, userID uuid.UUID) ([]
 	return s.repo.GetUserBookings(ctx, userID)
 }
 
-func (s *PartService) GetOwnerEvents(ctx context.Context, ownerID uuid.UUID) ([]m.OwnerEvent, error) {
-	return s.repo.GetOwnerEvents(ctx, ownerID)
+func (s *PartService) GetOwnerEvents(ctx context.Context, ownerID uuid.UUID, roomID string) ([]m.OwnerEvent, error) {
+	var room uuid.NullUUID
+	if roomID != "" {
+		id, err := uuid.Parse(roomID)
+		if err != nil {
+			return nil, fmt.Errorf("%w: invalid room_id", ErrValidation)
+		}
+		room = uuid.NullUUID{UUID: id, Valid: true}
+	}
+	return s.repo.GetOwnerEvents(ctx, ownerID, room)
 }
 
 func (s *PartService) DecideBooking(ctx context.Context, bookingID, ownerID uuid.UUID, status string) (m.Booking, error) {
