@@ -17,6 +17,9 @@ var (
 	ErrEventStarted  = errors.New("event already started")
 	ErrEventFull     = errors.New("event is full")
 	ErrAlreadyBooked = errors.New("already booked")
+
+	ErrBookingNotFound = errors.New("booking not found")
+	ErrBookingDecided  = errors.New("booking already decided")
 )
 
 func (r *PartRepo) JoinEvent(ctx context.Context, eventID, userID uuid.UUID) (m.Booking, error) {
@@ -26,8 +29,6 @@ func (r *PartRepo) JoinEvent(ctx context.Context, eventID, userID uuid.UUID) (m.
 	}
 	defer tx.Rollback()
 
-	// FOR UPDATE блокирует строку события до конца транзакции:
-	// все записи и одобрения на это событие идут строго по очереди
 	var title string
 	var startsAt time.Time
 	var capacity int
@@ -77,7 +78,6 @@ func (r *PartRepo) JoinEvent(ctx context.Context, eventID, userID uuid.UUID) (m.
 		return m.Booking{}, fmt.Errorf("insert booking: %w", err)
 	}
 
-	// заявка улетает владельцу события
 	_, err = tx.ExecContext(ctx, `
 		INSERT INTO notifications (user_id, booking_id, type, text)
 		VALUES ($1, $2, 'booking_request', $3)`,
@@ -132,4 +132,81 @@ func (r *PartRepo) GetUserBookings(ctx context.Context, userID uuid.UUID) ([]m.M
 		bookings = append(bookings, b)
 	}
 	return bookings, rows.Err()
+}
+
+func (r *PartRepo) DecideBooking(ctx context.Context, bookingID, ownerID uuid.UUID, status string) (m.Booking, error) {
+	tx, err := r.db.BeginTx(ctx, nil)
+	if err != nil {
+		return m.Booking{}, fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	var eventID, userID uuid.UUID
+	var currentStatus, title string
+	var capacity int
+	var startsAt time.Time
+	err = tx.QueryRowContext(ctx, `
+		SELECT b.event_id, b.user_id, b.status, e.title, e.capacity, e.starts_at
+		FROM bookings b
+		JOIN events e ON e.id = b.event_id
+		JOIN rooms r ON r.id = e.room_id
+		WHERE b.id = $1 AND r.owner_id = $2 AND e.status = 'active'
+		FOR UPDATE OF b, e`, bookingID, ownerID,
+	).Scan(&eventID, &userID, &currentStatus, &title, &capacity, &startsAt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return m.Booking{}, ErrBookingNotFound
+		}
+		return m.Booking{}, fmt.Errorf("lock booking: %w", err)
+	}
+
+	if currentStatus != "pending" {
+		return m.Booking{}, ErrBookingDecided
+	}
+	if !startsAt.After(time.Now()) {
+		return m.Booking{}, ErrEventStarted
+	}
+
+	if status == "confirmed" && capacity > 0 {
+		var confirmed int
+		err = tx.QueryRowContext(ctx, `
+			SELECT COUNT(*) FROM bookings
+			WHERE event_id = $1 AND status = 'confirmed'`, eventID,
+		).Scan(&confirmed)
+		if err != nil {
+			return m.Booking{}, fmt.Errorf("count bookings: %w", err)
+		}
+		if confirmed >= capacity {
+			return m.Booking{}, ErrEventFull
+		}
+	}
+
+	var b m.Booking
+	err = tx.QueryRowContext(ctx, `
+		UPDATE bookings
+		SET status = $2, updated_at = NOW()
+		WHERE id = $1
+		RETURNING id, event_id, user_id, status, created_at, updated_at`, bookingID, status,
+	).Scan(&b.ID, &b.EventID, &b.UserID, &b.Status, &b.CreatedAt, &b.UpdatedAt)
+	if err != nil {
+		return m.Booking{}, fmt.Errorf("update booking: %w", err)
+	}
+
+	text := "Заявка на событие «" + title + "» отклонена"
+	if status == "confirmed" {
+		text = "Заявка на событие «" + title + "» принята"
+	}
+	_, err = tx.ExecContext(ctx, `
+		INSERT INTO notifications (user_id, booking_id, type, text)
+		VALUES ($1, $2, $3, $4)`,
+		userID, b.ID, "booking_"+status, text,
+	)
+	if err != nil {
+		return m.Booking{}, fmt.Errorf("insert notification: %w", err)
+	}
+
+	if err = tx.Commit(); err != nil {
+		return m.Booking{}, fmt.Errorf("commit: %w", err)
+	}
+	return b, nil
 }

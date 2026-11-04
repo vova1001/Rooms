@@ -73,7 +73,6 @@ func (h *PartHandler) ListEvents(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	// фронт ждёт {items, next_cursor}; пагинации нет, поэтому next_cursor всегда null
 	if err = json.NewEncoder(w).Encode(map[string]any{"items": events, "next_cursor": nil}); err != nil {
 		log.Printf("encode events: %v", err)
 		return
@@ -162,6 +161,60 @@ func (h *PartHandler) GetMyEvents(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	if err = json.NewEncoder(w).Encode(events); err != nil {
 		log.Printf("encode events: %v", err)
+		return
+	}
+}
+
+func (h *PartHandler) DecideBooking(w http.ResponseWriter, r *http.Request) {
+	userID, ok := r.Context().Value(UserIDContextKey).(uuid.UUID)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	bookingID, err := uuid.Parse(r.PathValue("id"))
+	if err != nil {
+		http.Error(w, "invalid booking id", http.StatusBadRequest)
+		return
+	}
+
+	var req m.DecideBookingReq
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<10)
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid JSON", http.StatusBadRequest)
+		return
+	}
+
+	booking, err := h.service.DecideBooking(r.Context(), bookingID, userID, req.Status)
+	if err != nil {
+		if errors.Is(err, service.ErrValidation) {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if errors.Is(err, repository.ErrBookingNotFound) {
+			http.Error(w, "booking not found", http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, repository.ErrBookingDecided) {
+			http.Error(w, "booking already decided", http.StatusConflict)
+			return
+		}
+		if errors.Is(err, repository.ErrEventStarted) {
+			http.Error(w, "event already started", http.StatusConflict)
+			return
+		}
+		if errors.Is(err, repository.ErrEventFull) {
+			http.Error(w, "no seats left", http.StatusConflict)
+			return
+		}
+		log.Printf("decide booking: %v", err)
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err = json.NewEncoder(w).Encode(booking); err != nil {
+		log.Printf("encode booking: %v", err)
 		return
 	}
 }

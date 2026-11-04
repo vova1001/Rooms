@@ -60,7 +60,6 @@ func (s *PartService) ListEvents(ctx context.Context, date, timeZone string) ([]
 		return nil, fmt.Errorf("%w: invalid time_zone", ErrValidation)
 	}
 
-	// начало выбранного дня по времени пользователя, например 2026-11-05 00:00 МСК
 	dayStart, err := time.ParseInLocation("2006-01-02", date, loc)
 	if err != nil {
 		return nil, fmt.Errorf("%w: date must be YYYY-MM-DD", ErrValidation)
@@ -80,4 +79,11 @@ func (s *PartService) GetUserBookings(ctx context.Context, userID uuid.UUID) ([]
 
 func (s *PartService) GetOwnerEvents(ctx context.Context, ownerID uuid.UUID) ([]m.OwnerEvent, error) {
 	return s.repo.GetOwnerEvents(ctx, ownerID)
+}
+
+func (s *PartService) DecideBooking(ctx context.Context, bookingID, ownerID uuid.UUID, status string) (m.Booking, error) {
+	if status != "confirmed" && status != "rejected" {
+		return m.Booking{}, fmt.Errorf("%w: status must be confirmed or rejected", ErrValidation)
+	}
+	return s.repo.DecideBooking(ctx, bookingID, ownerID, status)
 }

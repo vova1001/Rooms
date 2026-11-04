@@ -141,22 +141,23 @@ type Booking struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
-// MyBooking — заявка пользователя вместе с карточкой события (для профиля)
 type MyBooking struct {
 	Booking
 	Event EventItem `json:"event"`
 }
 
-// BookingRequest — заявка на событие с данными участника (для владельца)
 type BookingRequest struct {
 	Booking
 	Username string `json:"username"`
 	Avatar   string `json:"avatar"`
 }
 
-// OwnerEvent — событие владельца со всеми заявками на него
 type OwnerEvent struct {
 	EventItem
 	Status   string           `json:"status"`
 	Bookings []BookingRequest `json:"bookings"`
+}
+
+type DecideBookingReq struct {
+	Status string `json:"status"`
 }

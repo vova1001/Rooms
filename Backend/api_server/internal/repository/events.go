@@ -79,7 +79,6 @@ func (r *PartRepo) ListEvents(ctx context.Context, dayStart, dayEnd time.Time) (
 }
 
 func (r *PartRepo) GetOwnerEvents(ctx context.Context, ownerID uuid.UUID) ([]m.OwnerEvent, error) {
-	// 1) мои события
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT e.id, e.title, e.description, e.starts_at, e.ends_at,
 		       e.price_minor, e.currency, e.capacity, e.status,
@@ -115,7 +114,7 @@ func (r *PartRepo) GetOwnerEvents(ctx context.Context, ownerID uuid.UUID) ([]m.O
 		ev.Bookings = make([]m.BookingRequest, 0)
 
 		events = append(events, ev)
-		eventIDs = append(eventIDs, ev.ID) // собираем id моих событий
+		eventIDs = append(eventIDs, ev.ID)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("owner events rows: %w", err)
@@ -124,7 +123,6 @@ func (r *PartRepo) GetOwnerEvents(ctx context.Context, ownerID uuid.UUID) ([]m.O
 		return events, nil
 	}
 
-	// 2) заявки только на эти события
 	rows, err = r.db.QueryContext(ctx, `
 		SELECT b.id, b.event_id, b.user_id, b.status, b.created_at, b.updated_at,
 		       u.username, COALESCE(u.avatar, '')
@@ -138,7 +136,7 @@ func (r *PartRepo) GetOwnerEvents(ctx context.Context, ownerID uuid.UUID) ([]m.O
 	}
 	defer rows.Close()
 
-	bookingsByEvent := make(map[uuid.UUID][]m.BookingRequest) // id события → его заявки
+	bookingsByEvent := make(map[uuid.UUID][]m.BookingRequest)
 	for rows.Next() {
 		var br m.BookingRequest
 		if err := rows.Scan(&br.ID, &br.EventID, &br.UserID, &br.Status, &br.CreatedAt, &br.UpdatedAt,
@@ -151,7 +149,6 @@ func (r *PartRepo) GetOwnerEvents(ctx context.Context, ownerID uuid.UUID) ([]m.O
 		return nil, fmt.Errorf("owner bookings rows: %w", err)
 	}
 
-	// 3) кладём заявки в их события
 	for i := range events {
 		if bs, ok := bookingsByEvent[events[i].ID]; ok {
 			events[i].Bookings = bs
