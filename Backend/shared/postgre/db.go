@@ -192,5 +192,15 @@ func Migrate(db *sql.DB) error {
 	}
 	log.Println("Table indx_msg ready")
 
+	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_rooms_owner ON rooms(owner_id)`)
+	if err != nil {
+		return fmt.Errorf("create idx_rooms_owner: %w", err)
+	}
+
+	_, err = db.Exec(`CREATE INDEX IF NOT EXISTS idx_events_room ON events(room_id)`)
+	if err != nil {
+		return fmt.Errorf("create idx_events_room: %w", err)
+	}
+
 	return nil
 }

@@ -77,3 +77,7 @@ func (s *PartService) JoinEvent(ctx context.Context, eventID, userID uuid.UUID) 
 func (s *PartService) GetUserBookings(ctx context.Context, userID uuid.UUID) ([]m.MyBooking, error) {
 	return s.repo.GetUserBookings(ctx, userID)
 }
+
+func (s *PartService) GetOwnerEvents(ctx context.Context, ownerID uuid.UUID) ([]m.OwnerEvent, error) {
+	return s.repo.GetOwnerEvents(ctx, ownerID)
+}
