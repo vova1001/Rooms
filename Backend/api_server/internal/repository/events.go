@@ -39,7 +39,7 @@ func (r *PartRepo) CreateEvent(ctx context.Context, req m.CreateEventReq) (m.Eve
 	return ev, nil
 }
 
-func (r *PartRepo) ListEvents(ctx context.Context, dayStart, dayEnd time.Time) ([]m.EventItem, error) {
+func (r *PartRepo) ListEvents(ctx context.Context, dayStart, dayEnd time.Time, roomID uuid.NullUUID) ([]m.EventItem, error) {
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT e.id, e.title, e.description, e.starts_at, e.ends_at,
 		       e.price_minor, e.currency, e.capacity,
@@ -47,9 +47,11 @@ func (r *PartRepo) ListEvents(ctx context.Context, dayStart, dayEnd time.Time) (
 		       (SELECT COUNT(*) FROM bookings b WHERE b.event_id = e.id AND b.status = 'confirmed')
 		FROM events e
 		JOIN rooms r ON r.id = e.room_id
-		WHERE e.starts_at < $2 AND e.ends_at > $1
+		WHERE e.status = 'active'
+		  AND e.starts_at >= $1 AND e.starts_at < $2
+		  AND ($3::uuid IS NULL OR e.room_id = $3)
 		ORDER BY e.starts_at`,
-		dayStart, dayEnd,
+		dayStart, dayEnd, roomID,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("list events: %w", err)

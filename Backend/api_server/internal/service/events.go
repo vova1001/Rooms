@@ -51,7 +51,7 @@ func (s *PartService) CreateEvent(ctx context.Context, req m.CreateEventReq) (m.
 	return s.repo.CreateEvent(ctx, req)
 }
 
-func (s *PartService) ListEvents(ctx context.Context, date, timeZone string) ([]m.EventItem, error) {
+func (s *PartService) ListEvents(ctx context.Context, date, timeZone, roomID string) ([]m.EventItem, error) {
 	if timeZone == "" {
 		timeZone = "UTC"
 	}
@@ -66,7 +66,16 @@ func (s *PartService) ListEvents(ctx context.Context, date, timeZone string) ([]
 	}
 	dayEnd := dayStart.AddDate(0, 0, 1)
 
-	return s.repo.ListEvents(ctx, dayStart, dayEnd)
+	var room uuid.NullUUID
+	if roomID != "" {
+		id, err := uuid.Parse(roomID)
+		if err != nil {
+			return nil, fmt.Errorf("%w: invalid room_id", ErrValidation)
+		}
+		room = uuid.NullUUID{UUID: id, Valid: true}
+	}
+
+	return s.repo.ListEvents(ctx, dayStart, dayEnd, room)
 }
 
 func (s *PartService) JoinEvent(ctx context.Context, eventID, userID uuid.UUID) (m.Booking, error) {

@@ -61,7 +61,7 @@ func (h *PartHandler) CreateEvent(w http.ResponseWriter, r *http.Request) {
 func (h *PartHandler) ListEvents(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 
-	events, err := h.service.ListEvents(r.Context(), q.Get("date"), q.Get("time_zone"))
+	events, err := h.service.ListEvents(r.Context(), q.Get("date"), q.Get("time_zone"), q.Get("room_id"))
 	if err != nil {
 		if errors.Is(err, service.ErrValidation) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
