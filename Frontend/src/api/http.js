@@ -110,6 +110,24 @@ export function createEvent(roomId, fields) {
   });
 }
 
+export function getMyBookings() {
+  return request('/profile/bookings');
+}
+
+export function getMyEvents() {
+  return request('/profile/events');
+}
+
+export function decideBooking(bookingId, status) {
+  return request(`/bookings/${encodeURIComponent(bookingId)}`, {
+    method: 'PATCH', body: JSON.stringify({ status }),
+  });
+}
+
+export function joinEvent(eventId) {
+  return request(`/events/${encodeURIComponent(eventId)}/join`, { method: 'POST' });
+}
+
 export async function getEvents(date, timeZone, roomId) {
   const params = new URLSearchParams({ date, time_zone: timeZone, limit: '100' });
   if (roomId) params.set('room_id', roomId);

@@ -1,5 +1,7 @@
-import { CalendarCheck, CalendarClock, CalendarDays, CalendarX } from 'lucide-react';
+import { CalendarCheck, CalendarClock, CalendarDays, CalendarX, RefreshCw } from 'lucide-react';
 import { useState } from 'react';
+import { getMyBookings } from '../api/http';
+import useProfileEventList from '../hooks/useProfileEventList';
 
 // Статусы записей на мероприятия. Ключи совпадают с bookings.status на сервере.
 const TABS = [
@@ -29,9 +31,8 @@ function formatDateTime(value) {
   return date.toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 }
 
-// bookings: [{ id, title, start_at, status }] — когда появится ручка на бэкенде,
-// сюда достаточно передать её ответ.
-export default function ProfileEvents({ bookings = [] }) {
+export default function ProfileEvents({ refreshSession }) {
+  const { items: bookings, loading, error, reload } = useProfileEventList(getMyBookings, refreshSession);
   const [active, setActive] = useState('pending');
   const tab = TABS.find((item) => item.key === active);
   const items = bookings.filter((booking) => booking.status === active);
@@ -44,6 +45,7 @@ export default function ProfileEvents({ bookings = [] }) {
           <h2>Мои мероприятия</h2>
           <p>Записи, на которые вы откликнулись, и их статус.</p>
         </div>
+        <button type="button" className="icon-button" aria-label="Обновить мои заявки" disabled={loading} onClick={reload}><RefreshCw size={17} className={loading ? 'spin' : ''} /></button>
       </header>
 
       <div className="profile-tabs" role="tablist" aria-label="Статус записей">
@@ -63,7 +65,8 @@ export default function ProfileEvents({ bookings = [] }) {
         ))}
       </div>
 
-      {items.length === 0 ? (
+      {error && <div className="error-message profile-events-error" role="alert">{error}</div>}
+      {loading && !bookings.length ? <div className="profile-panel-empty" role="status"><div className="loader" /><span>Загружаем заявки…</span></div> : error && !bookings.length ? null : items.length === 0 ? (
         <div className="profile-panel-empty">
           <span className="empty-icon"><CalendarDays size={24} /></span>
           <strong>{tab.empty}</strong>
@@ -74,8 +77,9 @@ export default function ProfileEvents({ bookings = [] }) {
           {items.map((booking) => (
             <li key={booking.id} className="profile-booking">
               <div>
-                <strong>{booking.title}</strong>
-                <span>{formatDateTime(booking.start_at)}</span>
+                <strong>{booking.event.title}</strong>
+                <span>{formatDateTime(booking.event.starts_at)} — {formatDateTime(booking.event.ends_at)}</span>
+                <span>{booking.event.room.name}</span>
               </div>
               <span className={`profile-booking-status is-${booking.status}`}>{tab.label}</span>
             </li>

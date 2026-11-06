@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { getProfile, updateProfile } from '../api/http';
 import Avatar from '../components/Avatar';
 import ProfileEvents from '../components/ProfileEvents';
+import OrganizerEvents from '../components/OrganizerEvents';
 import Sidebar from '../components/Sidebar';
 import { getStoredUser, saveUser } from '../utils/session';
 
@@ -248,7 +249,8 @@ export default function ProfilePage({ refreshSession }) {
               )}
             </section>
 
-            <ProfileEvents />
+            <ProfileEvents refreshSession={refreshSession} />
+            <OrganizerEvents refreshSession={refreshSession} />
           </div>
         )}
       </main>

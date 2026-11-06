@@ -1,12 +1,15 @@
 import { ChevronLeft, ChevronRight, CalendarDays, Clock, Lock } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { getEvents } from '../api/http';
+import useEventBookings from '../hooks/useEventBookings';
+import EventBookingAction from './EventBookingAction';
 
 function dateKey(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
 export default function EventsPanel({ refreshSession, roomId, initialDate }) {
+  const applications = useEventBookings(refreshSession);
   const [today] = useState(() => new Date());
   const [selected, setSelected] = useState(() => dateKey(initialDate ? new Date(initialDate) : today));
   const [month, setMonth] = useState(() => { const date = initialDate ? new Date(initialDate) : today; return new Date(date.getFullYear(), date.getMonth(), 1); });
@@ -64,11 +67,13 @@ export default function EventsPanel({ refreshSession, roomId, initialDate }) {
       </aside>
       <h2 className="events-date-heading">{new Date(`${selected}T12:00:00`).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</h2>
       <div className="events-feed" aria-busy={loading}>
+        {applications.loadError && <div className="event-booking-load-error"><div className="error-message" role="alert">{applications.loadError}</div><button type="button" className="secondary-button" onClick={applications.reload}>Обновить заявки</button></div>}
         {loading ? <div className="empty-state" role="status"><div className="loader" /><p>Загружаем мероприятия…</p></div> : error ? <div className="events-error"><div className="error-banner" role="alert">{error}</div><button type="button" className="secondary-button" onClick={() => setRetry((value) => value + 1)}>Попробовать снова</button></div> : events.length ? events.map((event) => (
           <article className="event-card" key={event.id}>
             <div className="event-card-meta"><span><Clock size={15} />{time(event.starts_at)}–{time(event.ends_at)}</span><span className="event-price">{event.is_free ? 'Бесплатно' : new Intl.NumberFormat('ru-RU', { style: 'currency', currency: event.currency }).format(event.price_minor / 100)}</span></div>
             <h3>{event.title}</h3><p>{event.description}</p>
             <div className="event-room">{event.room.visibility === 'closed' && <Lock size={14} />}{event.room.name}{event.room.visibility === 'closed' && ' · вход по коду'}</div>
+            <EventBookingAction event={event} booking={applications.bookings[event.id]} isOrganizer={Boolean(applications.organized[event.id])} loading={applications.loading || Boolean(applications.loadError)} sending={Boolean(applications.pending[event.id])} error={applications.errors[event.id]} onJoin={applications.join} />
           </article>
         )) : <div className="empty-state"><CalendarDays size={30} /><h3>{roomId ? 'В комнате пока нет встреч на этот день' : 'На этот день планов нет'}</h3><p>Выберите другую дату в календаре.</p></div>}
       </div>
