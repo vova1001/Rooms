@@ -1,3 +1,18 @@
+export function formatEventTimeRange(startsAt, endsAt, timeZone) {
+  const start = startsAt ? new Date(startsAt) : new Date(NaN);
+  const end = endsAt ? new Date(endsAt) : new Date(NaN);
+  if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) return 'Дата уточняется';
+  const dayFormatter = new Intl.DateTimeFormat('en-CA', { timeZone, year: 'numeric', month: '2-digit', day: '2-digit' });
+  const timeFormatter = new Intl.DateTimeFormat('ru-RU', { timeZone, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+  if (dayFormatter.format(start) === dayFormatter.format(end)) {
+    return `${timeFormatter.format(start)}–${timeFormatter.format(end)}`;
+  }
+  const yearFormatter = new Intl.DateTimeFormat('en', { timeZone, year: 'numeric' });
+  const showYear = yearFormatter.format(start) !== yearFormatter.format(end);
+  const dateFormatter = new Intl.DateTimeFormat('ru-RU', { timeZone, day: 'numeric', month: 'long', ...(showYear ? { year: 'numeric' } : {}) });
+  return `${dateFormatter.format(start)}, ${timeFormatter.format(start)} — ${dateFormatter.format(end)}, ${timeFormatter.format(end)}`;
+}
+
 // Date сам исправляет 31 февраля; для формы такое исправление недопустимо.
 export function parseEventLocalDateTime(value) {
   const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value);

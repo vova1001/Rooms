@@ -1560,6 +1560,9 @@ button.profile-block:hover, button.profile-block.active { border-color: rgba(166
 .event-card > p { color: var(--muted); line-height: 1.65; margin: 0 0 20px; overflow-wrap: anywhere; }
 .event-card-meta { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; font-size: 13px; }
 .event-card-meta > span, .event-room { display: inline-flex; gap: 7px; align-items: center; }
+.event-card-meta > .event-time-range { min-width: 0; max-width: 100%; line-height: 1.6; }
+.event-time-range > svg { flex-shrink: 0; }
+.event-time-range > span { min-width: 0; overflow-wrap: anywhere; }
 .event-price { color: var(--accent); font-weight: 700; }
 .event-room { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
 .events-error { display: grid; gap: 12px; justify-items: start; }

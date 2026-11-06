@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { getEvents } from '../api/http';
 import useEventBookings from '../hooks/useEventBookings';
 import EventBookingAction from './EventBookingAction';
+import { formatEventTimeRange } from '../utils/events';
 
 function dateKey(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -38,7 +39,6 @@ export default function EventsPanel({ refreshSession, roomId, initialDate }) {
 
   const offset = (month.getDay() + 6) % 7;
   const count = new Date(month.getFullYear(), month.getMonth() + 1, 0).getDate();
-  const time = (value) => new Date(value).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', timeZone });
   function moveMonth(step) {
     const next = new Date(month.getFullYear(), month.getMonth() + step, 1);
     setMonth(next);
@@ -70,7 +70,7 @@ export default function EventsPanel({ refreshSession, roomId, initialDate }) {
         {applications.loadError && <div className="event-booking-load-error"><div className="error-message" role="alert">{applications.loadError}</div><button type="button" className="secondary-button" onClick={applications.reload}>Обновить заявки</button></div>}
         {loading ? <div className="empty-state" role="status"><div className="loader" /><p>Загружаем мероприятия…</p></div> : error ? <div className="events-error"><div className="error-banner" role="alert">{error}</div><button type="button" className="secondary-button" onClick={() => setRetry((value) => value + 1)}>Попробовать снова</button></div> : events.length ? events.map((event) => (
           <article className="event-card" key={event.id}>
-            <div className="event-card-meta"><span><Clock size={15} />{time(event.starts_at)}–{time(event.ends_at)}</span><span className="event-price">{event.is_free ? 'Бесплатно' : new Intl.NumberFormat('ru-RU', { style: 'currency', currency: event.currency }).format(event.price_minor / 100)}</span></div>
+            <div className="event-card-meta"><span className="event-time-range"><Clock size={15} /><span>{formatEventTimeRange(event.starts_at, event.ends_at, timeZone)}</span></span><span className="event-price">{event.is_free ? 'Бесплатно' : new Intl.NumberFormat('ru-RU', { style: 'currency', currency: event.currency }).format(event.price_minor / 100)}</span></div>
             <h3>{event.title}</h3><p>{event.description}</p>
             <div className="event-room">{event.room.visibility === 'closed' && <Lock size={14} />}{event.room.name}{event.room.visibility === 'closed' && ' · вход по коду'}</div>
             <EventBookingAction event={event} booking={applications.bookings[event.id]} isOrganizer={Boolean(applications.organized[event.id])} loading={applications.loading || Boolean(applications.loadError)} sending={Boolean(applications.pending[event.id])} error={applications.errors[event.id]} onJoin={applications.join} />
