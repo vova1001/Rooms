@@ -716,7 +716,7 @@ function RoomInterior({ room, user, chat, onLeave, refreshSession }) {
         <button type="button" className={!eventsOpen ? 'is-active' : ''} aria-pressed={!eventsOpen} onClick={() => setEventsOpen(false)}>Голосовая комната</button>
         <button type="button" className={eventsOpen ? 'is-active' : ''} aria-pressed={eventsOpen} onClick={() => { setEventsOpen(true); setIsChatOpen(false); }}>Мероприятия комнаты</button>
       </nav>
-      {eventsOpen && <RoomEvents room={room} refreshSession={refreshSession} />}
+      {eventsOpen && <RoomEvents room={room} user={user} refreshSession={refreshSession} />}
 
       <ChatPanel
         chat={chat}

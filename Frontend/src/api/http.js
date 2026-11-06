@@ -103,6 +103,13 @@ export function getRooms() {
   return request('/rooms');
 }
 
+export function createEvent(roomId, fields) {
+  return request(`/rooms/${encodeURIComponent(roomId)}/events`, {
+    method: 'POST',
+    body: JSON.stringify(fields),
+  });
+}
+
 export async function getEvents(date, timeZone, roomId) {
   const params = new URLSearchParams({ date, time_zone: timeZone, limit: '100' });
   if (roomId) params.set('room_id', roomId);

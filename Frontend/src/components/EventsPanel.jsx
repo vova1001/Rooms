@@ -6,10 +6,10 @@ function dateKey(date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 }
 
-export default function EventsPanel({ refreshSession, roomId }) {
+export default function EventsPanel({ refreshSession, roomId, initialDate }) {
   const [today] = useState(() => new Date());
-  const [selected, setSelected] = useState(() => dateKey(today));
-  const [month, setMonth] = useState(() => new Date(today.getFullYear(), today.getMonth(), 1));
+  const [selected, setSelected] = useState(() => dateKey(initialDate ? new Date(initialDate) : today));
+  const [month, setMonth] = useState(() => { const date = initialDate ? new Date(initialDate) : today; return new Date(date.getFullYear(), date.getMonth(), 1); });
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
