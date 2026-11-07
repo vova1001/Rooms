@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { CalendarDays, Check, ChevronDown, RefreshCw, X } from 'lucide-react';
+import { CalendarDays, Check, ChevronDown, History, RefreshCw, X } from 'lucide-react';
 import { decideBooking, getMyEvents } from '../api/http';
 import useProfileEventList from '../hooks/useProfileEventList';
 import Avatar from './Avatar';
+import { groupOrganizerEvents } from '../utils/bookings';
 
 const labels = { pending: 'Ожидает решения', confirmed: 'Принята', rejected: 'Отклонена' };
 const errors = {
@@ -11,7 +12,7 @@ const errors = {
   'no seats left': 'Свободных мест больше нет.',
   'booking not found': 'Заявка не найдена или у вас нет прав на неё.',
 };
-const format = (value) => new Date(value).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
+const format = (value) => new Date(value).toLocaleString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 export default function OrganizerEvents({ refreshSession, roomId }) {
   const load = useCallback(() => getMyEvents(roomId), [roomId]);
@@ -20,13 +21,17 @@ export default function OrganizerEvents({ refreshSession, roomId }) {
   const [decisionErrors, setDecisionErrors] = useState({});
   const [notice, setNotice] = useState('');
   const [selectedEventId, setSelectedEventId] = useState(null);
+  const [view, setView] = useState('upcoming');
   const [now, setNow] = useState(Date.now);
   const active = useRef(false);
   const inFlight = useRef(new Set());
   useEffect(() => {
     active.current = true;
-    const timer = window.setInterval(() => setNow(Date.now()), 15000);
-    return () => { active.current = false; window.clearInterval(timer); };
+    const update = () => setNow(Date.now());
+    const timer = window.setInterval(update, 15000);
+    window.addEventListener('focus', update);
+    document.addEventListener('visibilitychange', update);
+    return () => { active.current = false; window.clearInterval(timer); window.removeEventListener('focus', update); document.removeEventListener('visibilitychange', update); };
   }, []);
   async function decide(eventId, bookingId, status) {
     if (inFlight.current.has(bookingId)) return;
@@ -57,17 +62,22 @@ export default function OrganizerEvents({ refreshSession, roomId }) {
       if (active.current) setPending((current) => ({ ...current, [bookingId]: false }));
     }
   }
-  const requests = events.reduce((count, event) => count + event.bookings.filter((booking) => booking.status === 'pending').length, 0);
+  const groups = groupOrganizerEvents(events, now);
+  const visibleEvents = groups[view];
+  const requests = groups.upcoming.reduce((count, event) => count + (event.status === 'active' && Date.parse(event.starts_at) > now ? event.bookings.filter((booking) => booking.status === 'pending').length : 0), 0);
   return (
     <section className="profile-panel organizer-events">
       <header className="profile-panel-head"><div><h2>{roomId ? 'Заявки на мероприятия комнаты' : 'Я организатор'}</h2><p>{roomId ? 'Выберите мероприятие этой комнаты, чтобы посмотреть заявки участников.' : 'Созданные мероприятия и заявки участников.'}{requests > 0 && ` Ожидают решения: ${requests}.`}</p></div><button className="icon-button" type="button" aria-label="Обновить мероприятия организатора" disabled={loading} onClick={reload}><RefreshCw size={17} className={loading ? 'spin' : ''} /></button></header>
+      <div className="profile-tabs organizer-event-tabs" role="group" aria-label="Период мероприятий организатора">
+        {[{ key: 'upcoming', label: 'Предстоящие и текущие', icon: CalendarDays }, { key: 'past', label: 'Прошедшие', icon: History }].map(({ key, label, icon: Icon }) => <button key={key} type="button" className={`profile-tab ${view === key ? 'is-active' : ''}`} aria-pressed={view === key} onClick={() => { setView(key); setSelectedEventId(null); }}><Icon size={16} /><span>{label}</span><span className="profile-tab-count">{groups[key].length}</span></button>)}
+      </div>
       {notice && <div className="event-created-note organizer-notice" role="status">{notice}</div>}
       {error && <div className="error-message profile-events-error" role="alert">{error}</div>}
-      {loading && !events.length ? <div className="profile-panel-empty" role="status"><div className="loader" /><span>Загружаем мероприятия…</span></div> : !events.length && !error ? <div className="profile-panel-empty"><CalendarDays size={24} /><strong>{roomId ? 'В этой комнате пока нет мероприятий' : 'Вы пока не создали мероприятий'}</strong><span>{roomId ? 'Нажмите «Создать мероприятие», чтобы добавить встречу.' : 'Создайте встречу внутри своей комнаты.'}</span></div> : events.map((event) => (
+      {loading && !events.length ? <div className="profile-panel-empty" role="status"><div className="loader" /><span>Загружаем мероприятия…</span></div> : !visibleEvents.length && (!error || events.length > 0) ? <div className="profile-panel-empty"><CalendarDays size={24} /><strong>{view === 'past' ? 'Прошедших мероприятий пока нет' : 'Предстоящих и текущих мероприятий пока нет'}</strong><span>{view === 'past' ? 'Здесь появятся созданные вами мероприятия после их окончания.' : roomId ? 'Нажмите «Создать мероприятие», чтобы добавить встречу.' : 'Создайте встречу внутри своей комнаты.'}</span></div> : visibleEvents.map((event) => (
         <article key={event.id} className={`organizer-event ${selectedEventId === event.id ? 'is-expanded' : ''}`}>
           <button type="button" className="organizer-event-toggle" aria-expanded={selectedEventId === event.id} aria-controls={`event-requests-${event.id}`} onClick={() => setSelectedEventId((current) => current === event.id ? null : event.id)}>
             <span className="organizer-event-summary"><strong className="organizer-event-title">{event.title}</strong><span className="organizer-event-meta">{format(event.starts_at)} — {format(event.ends_at)}<br />{event.room.name} · {event.capacity > 0 ? `${event.participants_count} из ${event.capacity} мест занято` : 'Без ограничения мест'}</span>
-              <span className="organizer-request-count">Заявок: {event.bookings.length}{event.bookings.some((booking) => booking.status === 'pending') && <span> · Ожидают: {event.bookings.filter((booking) => booking.status === 'pending').length}</span>}</span>
+              <span className="organizer-request-count">Заявок: {event.bookings.length}{event.bookings.some((booking) => booking.status === 'pending') && <span> · {view === 'past' ? 'Без решения' : 'Ожидают'}: {event.bookings.filter((booking) => booking.status === 'pending').length}</span>}</span>
             </span>
             <ChevronDown size={20} className="organizer-event-chevron" />
           </button>

@@ -109,6 +109,11 @@ button.profile-block:hover, button.profile-block.active { border-color: rgba(166
 .profile-tab:hover { color: var(--text); }
 .profile-tab.is-active { background: var(--panel-2); color: var(--text); box-shadow: 0 0 0 1px var(--border); }
 .profile-tab-count { min-width: 22px; padding: 1px 7px; border-radius: 999px; background: #232933; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.organizer-event-tabs .profile-tab { min-width: 0; }
+.organizer-event-tabs .profile-tab svg { flex-shrink: 0; }
+@media (max-width: 560px) {
+  .organizer-event-tabs { flex-direction: column; }
+}
 .profile-tab.is-active .profile-tab-count { background: rgba(166,255,98,.14); color: var(--accent); }
 .profile-panel-empty { min-height: 220px; display: grid; place-items: center; align-content: center; gap: 8px; text-align: center; color: var(--muted); font-size: 14px; padding: 30px 10px; }
 .profile-panel-empty .empty-icon { margin-bottom: 8px; }
@@ -121,6 +126,11 @@ button.profile-block:hover, button.profile-block.active { border-color: rgba(166
 .profile-booking-status { flex: 0 0 auto; padding: 5px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; }
 .profile-booking-status.is-pending { background: rgba(255,200,80,.12); color: #ffd27a; }
 .profile-booking-status.is-confirmed { background: rgba(166,255,98,.12); color: var(--accent); }
+.profile-booking-status.is-past { background: #232933; color: #bcc4d1; }
+@media (max-width: 700px) {
+  .profile-event-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); overflow: visible; }
+  .profile-event-tabs .profile-tab { min-width: 0; padding: 10px 6px; }
+}
 .profile-booking-status.is-rejected { background: rgba(255,114,114,.12); color: #ff9c9c; }
 
 @media (max-width: 640px) {
