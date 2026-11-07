@@ -114,8 +114,10 @@ export function getMyBookings() {
   return request('/profile/bookings');
 }
 
-export function getMyEvents() {
-  return request('/profile/events');
+export function getMyEvents(roomId) {
+  const params = new URLSearchParams();
+  if (roomId) params.set('room_id', roomId);
+  return request(`/profile/events${params.size ? `?${params}` : ''}`);
 }
 
 export function decideBooking(bookingId, status) {

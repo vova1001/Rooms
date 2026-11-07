@@ -13,8 +13,8 @@ export function normalizeRoom(room) {
   return {
     id: room?.id || room?.ID,
     name: room?.name || room?.room_name || room?.RoomName || 'Без названия',
-    ownerId: room?.owner_id || room?.OwnerID,
-    createdAt: room?.created_at || room?.CreatedAt,
+    ownerId: room?.owner_id || room?.OwnerID || room?.ownerId,
+    createdAt: room?.created_at || room?.CreatedAt || room?.createdAt,
     users: Array.isArray(rawUsers) ? rawUsers.map(normalizeUser).filter((user) => user.id) : [],
   };
 }

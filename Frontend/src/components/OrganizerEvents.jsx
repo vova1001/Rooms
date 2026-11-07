@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { CalendarDays, Check, ChevronDown, RefreshCw, X } from 'lucide-react';
 import { decideBooking, getMyEvents } from '../api/http';
 import useProfileEventList from '../hooks/useProfileEventList';
@@ -13,8 +13,9 @@ const errors = {
 };
 const format = (value) => new Date(value).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' });
 
-export default function OrganizerEvents({ refreshSession }) {
-  const { items: events, loading, error, reload, updateItems } = useProfileEventList(getMyEvents, refreshSession);
+export default function OrganizerEvents({ refreshSession, roomId }) {
+  const load = useCallback(() => getMyEvents(roomId), [roomId]);
+  const { items: events, loading, error, reload, updateItems } = useProfileEventList(load, refreshSession);
   const [pending, setPending] = useState({});
   const [decisionErrors, setDecisionErrors] = useState({});
   const [notice, setNotice] = useState('');
@@ -59,10 +60,10 @@ export default function OrganizerEvents({ refreshSession }) {
   const requests = events.reduce((count, event) => count + event.bookings.filter((booking) => booking.status === 'pending').length, 0);
   return (
     <section className="profile-panel organizer-events">
-      <header className="profile-panel-head"><div><h2>Я организатор</h2><p>Созданные мероприятия и заявки участников.{requests > 0 && ` Ожидают решения: ${requests}.`}</p></div><button className="icon-button" type="button" aria-label="Обновить мероприятия организатора" disabled={loading} onClick={reload}><RefreshCw size={17} className={loading ? 'spin' : ''} /></button></header>
+      <header className="profile-panel-head"><div><h2>{roomId ? 'Заявки на мероприятия комнаты' : 'Я организатор'}</h2><p>{roomId ? 'Выберите мероприятие этой комнаты, чтобы посмотреть заявки участников.' : 'Созданные мероприятия и заявки участников.'}{requests > 0 && ` Ожидают решения: ${requests}.`}</p></div><button className="icon-button" type="button" aria-label="Обновить мероприятия организатора" disabled={loading} onClick={reload}><RefreshCw size={17} className={loading ? 'spin' : ''} /></button></header>
       {notice && <div className="event-created-note organizer-notice" role="status">{notice}</div>}
       {error && <div className="error-message profile-events-error" role="alert">{error}</div>}
-      {loading && !events.length ? <div className="profile-panel-empty" role="status"><div className="loader" /><span>Загружаем мероприятия…</span></div> : !events.length && !error ? <div className="profile-panel-empty"><CalendarDays size={24} /><strong>Вы пока не создали мероприятий</strong><span>Создайте встречу внутри своей комнаты.</span></div> : events.map((event) => (
+      {loading && !events.length ? <div className="profile-panel-empty" role="status"><div className="loader" /><span>Загружаем мероприятия…</span></div> : !events.length && !error ? <div className="profile-panel-empty"><CalendarDays size={24} /><strong>{roomId ? 'В этой комнате пока нет мероприятий' : 'Вы пока не создали мероприятий'}</strong><span>{roomId ? 'Нажмите «Создать мероприятие», чтобы добавить встречу.' : 'Создайте встречу внутри своей комнаты.'}</span></div> : events.map((event) => (
         <article key={event.id} className={`organizer-event ${selectedEventId === event.id ? 'is-expanded' : ''}`}>
           <button type="button" className="organizer-event-toggle" aria-expanded={selectedEventId === event.id} aria-controls={`event-requests-${event.id}`} onClick={() => setSelectedEventId((current) => current === event.id ? null : event.id)}>
             <span className="organizer-event-summary"><strong className="organizer-event-title">{event.title}</strong><span className="organizer-event-meta">{format(event.starts_at)} — {format(event.ends_at)}<br />{event.room.name} · {event.capacity > 0 ? `${event.participants_count} из ${event.capacity} мест занято` : 'Без ограничения мест'}</span>

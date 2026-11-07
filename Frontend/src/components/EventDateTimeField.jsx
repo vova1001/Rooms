@@ -54,10 +54,9 @@ export default function EventDateTimeField({ id, label, value, onChange, disable
     <div className={`event-datetime-field ${open ? 'is-open' : ''}`}>
       <label htmlFor={id}>{label}</label>
       <div className="event-date-input-row">
-        <input ref={input} id={id} type="text" inputMode="numeric" autoComplete="off" placeholder="ДД.ММ.ГГГГ ЧЧ:ММ" aria-describedby={`${id}-hint`} value={formatEventDateTimeInput(value)} disabled={disabled} onChange={typeDateTime} />
+        <input ref={input} id={id} type="text" inputMode="numeric" autoComplete="off" placeholder="ДД.ММ.ГГГГ ЧЧ:ММ" value={formatEventDateTimeInput(value)} disabled={disabled} onChange={typeDateTime} />
         <button ref={trigger} type="button" className="event-date-trigger" disabled={disabled} aria-label={`Открыть календарь: ${label.toLowerCase()}`} aria-expanded={open} aria-controls={`${id}-picker`} onClick={show}><CalendarDays size={18} /></button>
       </div>
-      <small id={`${id}-hint`} className="event-form-hint">Введите цифры — разделители появятся автоматически, или выберите в календаре.</small>
       {open && <div id={`${id}-picker`} className="event-datetime-picker" role="group" aria-label={`${label}: дата и время`} onKeyDown={(event) => { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); setOpen(false); trigger.current?.focus(); } }}>
         <fieldset disabled={disabled} className="event-picker-fields">
           <legend className="event-picker-sr">{label}</legend>

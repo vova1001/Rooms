@@ -1583,6 +1583,7 @@ button.profile-block:hover, button.profile-block.active { border-color: rgba(166
 .room-events-heading { margin-bottom: 28px; }
 .room-events-heading h2 { font-size: clamp(24px, 3vw, 36px); letter-spacing: -.04em; margin: 12px 0; }
 .room-events-heading p { color: var(--muted); line-height: 1.65; margin: 0; overflow-wrap: anywhere; }
+.room-event-tabs { margin-bottom: 24px; }
 @media (max-width: 900px) {
   .sidebar { flex-wrap: wrap; }
   .sidebar-navigation { display: flex; order: 3; flex: 0 0 100%; margin: 4px 0 0; }
@@ -1596,6 +1597,8 @@ button.profile-block:hover, button.profile-block.active { border-color: rgba(166
   .room-header > div:first-child { min-width: 0; }
   .room-header h1 { overflow-wrap: anywhere; }
   .room-events-section { padding-top: 24px; }
+  .room-event-tabs { display: flex; width: 100%; }
+  .room-event-tabs button { flex: 1; padding: 11px 8px; font-size: 12px; }
 }
 
 /* Создание мероприятия владельцем комнаты */
