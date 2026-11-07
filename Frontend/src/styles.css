@@ -192,6 +192,28 @@ button.profile-block:hover, button.profile-block.active { border-color: rgba(166
 .connecting-card { place-self: center; text-align: center; max-width: 520px; }
 .connecting-card h1 { font-size: 50px; letter-spacing: -.06em; margin: 17px 0 10px; }
 .connecting-card p { color: var(--muted); line-height: 1.7; }
+.room-unlock-form { display: grid; gap: 14px; margin: 24px auto 0; width: min(340px, 100%); text-align: left; }
+.room-transition { min-height: 100dvh; background: var(--bg); }
+.connecting-page.is-loading { background: var(--bg); }
+.connecting-page.is-loading > * { animation: room-loading-reveal .25s ease both; }
+.room-list-loading { animation: room-loading-reveal .25s ease .3s both; }
+@keyframes room-loading-reveal { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .connecting-page.is-loading > * { animation: none; }
+  .room-list-loading { animation: room-loading-reveal 0s .3s both; }
+}
+.room-unlock-form input { width: 100%; min-width: 0; }
+.connecting-card .error-message { color: #ff8b8b; }
+.create-event-dialog.room-privacy-dialog { width: min(480px, calc(100% - 24px)); }
+.room-privacy-dialog h2 { overflow-wrap: anywhere; }
+.room-code-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.room-code-actions button { flex: 1; }
+@media (max-width: 560px) {
+  .room-header { flex-wrap: wrap; }
+  .room-header-actions { flex-wrap: wrap; }
+  .connecting-card { width: 100%; padding-top: 80px; padding-bottom: 24px; }
+  .connecting-card h1 { font-size: 32px; overflow-wrap: anywhere; }
+}
 .signal-animation { height: 75px; display: flex; align-items: center; justify-content: center; gap: 7px; margin-bottom: 30px; }
 .signal-animation span { width: 6px; border-radius: 10px; background: var(--accent); animation: signal 1s ease-in-out infinite alternate; }
 .signal-animation span:nth-child(1) { height: 23px; }

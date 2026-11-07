@@ -52,19 +52,23 @@ export function useGatewayJoin({ roomId, user, enabled = true }) {
     socketRef.current = socket;
 
     socket.onopen = () => {
+      if (socketRef.current !== socket) return;
       setStatus('waiting');
       setSocketOpen(true);
     };
     socket.onerror = () => {
+      if (socketRef.current !== socket) return;
       setError('Не удалось подключиться к Gateway');
       setStatus('error');
     };
     socket.onclose = () => {
+      if (socketRef.current !== socket) return;
       // Старый сокет (после смены комнаты) не должен трогать состояние нового.
       if (socketRef.current === socket) setSocketOpen(false);
       setStatus((current) => (current === 'error' ? current : 'closed'));
     };
     socket.onmessage = (event) => {
+      if (socketRef.current !== socket) return;
       try {
         const message = JSON.parse(event.data);
 

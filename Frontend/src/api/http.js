@@ -103,6 +103,18 @@ export function getRooms() {
   return request('/rooms');
 }
 
+export function unlockRoom(roomId, password) {
+  return request(`/rooms/${encodeURIComponent(roomId)}/unlock`, {
+    method: 'POST', body: JSON.stringify({ password }),
+  });
+}
+
+export function updateRoomPrivacy(roomId, isPrivate, password) {
+  return request(`/rooms/${encodeURIComponent(roomId)}/privacy`, {
+    method: 'PATCH', body: JSON.stringify({ is_private: isPrivate, ...(isPrivate ? { password } : {}) }),
+  });
+}
+
 export function createEvent(roomId, fields) {
   return request(`/rooms/${encodeURIComponent(roomId)}/events`, {
     method: 'POST',

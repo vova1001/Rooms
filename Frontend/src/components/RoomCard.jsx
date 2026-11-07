@@ -1,4 +1,4 @@
-import { ArrowUpRight, Radio } from 'lucide-react';
+import { ArrowUpRight, LockKeyhole, Radio } from 'lucide-react';
 import Avatar from './Avatar';
 
 export default function RoomCard({ room, onJoin }) {
@@ -8,7 +8,7 @@ export default function RoomCard({ room, onJoin }) {
   return (
     <button className="room-card" onClick={() => onJoin(room)} type="button">
       <div className="room-card-top">
-        <span className="live-dot"><Radio size={14} /> live</span>
+        <span className="live-dot">{room.isPrivate ? <><LockKeyhole size={14} /> Закрытая</> : <><Radio size={14} /> live</>}</span>
         <ArrowUpRight size={20} className="room-arrow" />
       </div>
       <div>

@@ -39,6 +39,7 @@ import useScreenShareStats from '../hooks/useScreenShareStats';
 import Avatar from './Avatar';
 import ChatPanel from './ChatPanel';
 import RoomEvents from './RoomEvents';
+import RoomPrivacySettings from './RoomPrivacySettings';
 
 const VOLUME_MAX = 200;
 
@@ -466,7 +467,7 @@ function ParticipantTile({
   );
 }
 
-function RoomInterior({ room, user, chat, onLeave, refreshSession }) {
+function RoomInterior({ room, user, chat, onLeave, refreshSession, onPrivacyChange }) {
   const [eventsOpen, setEventsOpen] = useState(false);
   const participants = useParticipants();
 
@@ -683,11 +684,12 @@ function RoomInterior({ room, user, chat, onLeave, refreshSession }) {
     <div className={`room-space room-with-events ${isChatOpen && !eventsOpen ? 'chat-open' : ''}`}>
       <header className="room-header">
         <div>
-          <span className="eyebrow">Голосовая комната</span>
+          <span className="eyebrow">{room.isPrivate ? 'Закрытая комната' : 'Голосовая комната'}</span>
           <h1>{room.name}</h1>
         </div>
 
         <div className="room-header-actions">
+          {room.ownerId === user?.id && <RoomPrivacySettings room={room} refreshSession={refreshSession} onSaved={onPrivacyChange} />}
           <button
             className={`secondary-button chat-toggle ${isChatOpen ? 'is-active' : ''}`}
             onClick={() => { setEventsOpen(false); setIsChatOpen((value) => !value); }}
@@ -982,6 +984,7 @@ export default function RoomExperience({
   chat,
   onLeave,
   refreshSession,
+  onPrivacyChange,
 }) {
   return (
     <LiveKitRoom
@@ -995,6 +998,7 @@ export default function RoomExperience({
       onDisconnected={onLeave}
     >
       <RoomInterior
+        onPrivacyChange={onPrivacyChange}
         refreshSession={refreshSession}
         room={room}
         user={user}

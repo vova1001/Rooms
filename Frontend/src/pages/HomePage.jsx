@@ -10,12 +10,14 @@ import { normalizeRoom } from '../utils/rooms';
 import { useSearchParams } from 'react-router-dom';
 import EventsPanel from '../components/EventsPanel';
 
+let roomCache = { userId: null, items: [] };
+
 export default function HomePage({ refreshSession }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const eventsOpen = searchParams.get('tab') === 'events';
   const user = getStoredUser();
-  const [rooms, setRooms] = useState([]);
+  const [rooms, setRooms] = useState(() => roomCache.userId === user?.id ? roomCache.items : []);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -36,7 +38,9 @@ export default function HomePage({ refreshSession }) {
     setError('');
     try {
       const data = await getRooms();
-      setRooms((Array.isArray(data) ? data : []).map(normalizeRoom));
+      const items = (Array.isArray(data) ? data : []).map(normalizeRoom);
+      roomCache = { userId: user?.id, items };
+      setRooms(items);
     } catch (err) {
       if (!(await handleUnauthorized(err))) setError(err.message);
     } finally {
@@ -64,7 +68,11 @@ export default function HomePage({ refreshSession }) {
     setError('');
     try {
       const created = normalizeRoom(await createRoom(name, user?.id));
-      setRooms((current) => [created, ...current.filter((room) => room.id !== created.id)]);
+      setRooms((current) => {
+        const items = [created, ...current.filter((room) => room.id !== created.id)];
+        roomCache = { userId: user?.id, items };
+        return items;
+      });
       setPanelOpen(false);
       joinRoom(created);
       return true;
@@ -83,7 +91,7 @@ export default function HomePage({ refreshSession }) {
       <main className="home-main">
         <header className="home-header">
           <div>
-            <span className="eyebrow">{eventsOpen ? 'Календарь встреч' : 'Открытые комнаты'}</span>
+            <span className="eyebrow">{eventsOpen ? 'Календарь встреч' : 'Комнаты для общения'}</span>
             <h1>{eventsOpen ? 'Что в планах?' : 'Куда зайдём?'}</h1>
           </div>
           {!eventsOpen && <button className="primary-button" onClick={() => setPanelOpen(true)} type="button">
@@ -105,12 +113,12 @@ export default function HomePage({ refreshSession }) {
         {error && <div className="error-banner">{error}</div>}
 
         <section className="room-grid">
-          {!loading && filteredRooms.map((room) => (
+          {filteredRooms.map((room) => (
             <RoomCard key={room.id} room={room} onJoin={joinRoom} />
           ))}
         </section>
 
-        {loading && <div className="empty-state"><div className="loader" /><h2>Ищем комнаты</h2></div>}
+        {loading && !rooms.length && <div className="empty-state room-list-loading"><div className="loader" /><h2>Ищем комнаты</h2></div>}
         {!loading && !filteredRooms.length && (
           <div className="empty-state">
             <span className="empty-icon"><Plus size={25} /></span>
