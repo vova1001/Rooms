@@ -48,7 +48,7 @@ func (r *PartRepo) ListEvents(ctx context.Context, dayStart, dayEnd time.Time, r
 		FROM events e
 		JOIN rooms r ON r.id = e.room_id
 		WHERE e.status = 'active'
-		  AND e.starts_at >= $1 AND e.starts_at < $2
+		  AND e.starts_at < $2 AND e.ends_at > $1
 		  AND ($3::uuid IS NULL OR e.room_id = $3)
 		ORDER BY e.starts_at`,
 		dayStart, dayEnd, roomID,
