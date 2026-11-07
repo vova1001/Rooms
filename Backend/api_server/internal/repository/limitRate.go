@@ -9,6 +9,7 @@ import (
 	"net"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -21,6 +22,9 @@ const (
 
 	VerifyLimit int64 = 5
 	VerifyKD          = 5 * time.Minute
+
+	RoomUnlockLimit int64 = 5
+	RoomUnlockKD          = 15 * time.Minute
 )
 
 var incrRateLimitScript = redis.NewScript(`
@@ -96,4 +100,15 @@ func hashKey(key, secret string) string {
 	mac := hmac.New(sha256.New, []byte(secret))
 	mac.Write([]byte(key))
 	return hex.EncodeToString(mac.Sum(nil))
+}
+
+func (r *PartRepo) AllowRoomUnlock(ctx context.Context, roomID, userID uuid.UUID) (bool, error) {
+	key := "rl:room_unlock:" + roomID.String() + ":" + userID.String()
+
+	count, err := incrRateLimitScript.Run(ctx, r.rdb, []string{key}, RoomUnlockKD.Milliseconds()).Int64()
+	if err != nil {
+		return false, fmt.Errorf("execute room unlock rate limit script: %w", err)
+	}
+
+	return count <= RoomUnlockLimit, nil
 }

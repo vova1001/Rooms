@@ -44,6 +44,7 @@ func (h *PartHandler) RegisterRoutes(r *http.ServeMux) {
 	r.Handle("PATCH /bookings/{id}", h.MiddlAuth(http.HandlerFunc(h.DecideBooking)))
 	r.Handle("POST /rooms/{id}/events", h.MiddlAuth(http.HandlerFunc(h.CreateEvent)))
 	r.Handle("PATCH /rooms/{id}/privacy", h.MiddlAuth(http.HandlerFunc(h.SetPrivacy)))
+	r.Handle("POST /rooms/{id}/unlock", h.MiddlAuth(http.HandlerFunc(h.UnlockRoom)))
 	r.HandleFunc("POST /avatars/unlock", h.UnlockAvatars)
 	r.HandleFunc("POST /auth/email/send-code", h.SendCode)
 	r.HandleFunc("POST /auth/email/verify-code", h.VerifyCode)
@@ -233,7 +234,13 @@ func (h *PartHandler) CreateRoom(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *PartHandler) GetAllRooms(w http.ResponseWriter, r *http.Request) {
-	rooms, err := h.service.GetAllRooms(r.Context())
+	userID, ok := r.Context().Value(UserIDContextKey).(uuid.UUID)
+	if !ok {
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	rooms, err := h.service.GetAllRooms(r.Context(), userID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -247,6 +254,8 @@ func (h *PartHandler) GetAllRooms(w http.ResponseWriter, r *http.Request) {
 			"name":       rm.RoomName,
 			"owner_id":   rm.OwnerID,
 			"created_at": rm.CreatedAt,
+			"is_private": rm.IsPrivate,
+			"has_access": rm.HasAccess,
 			"users":      rm.RoomUsers,
 		}
 	}

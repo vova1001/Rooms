@@ -16,6 +16,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -90,6 +91,26 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var userID = user.Id
+
+	if _, err := uuid.Parse(roomID); err != nil {
+		http.Error(w, "invalid room id", http.StatusBadRequest)
+		return
+	}
+
+	exists, allowed, err := h.s.CheckRoomAccess(r.Context(), roomID, userID)
+	if err != nil {
+		log.Printf("check room access room=%s user=%s: %v", roomID, userID, err)
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	if !exists {
+		http.Error(w, "room not found", http.StatusNotFound)
+		return
+	}
+	if !allowed {
+		http.Error(w, "room code required", http.StatusForbidden)
+		return
+	}
 
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {

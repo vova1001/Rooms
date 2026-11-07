@@ -68,8 +68,8 @@ func (s *PartService) CreateRoom(ctx context.Context, name string, ownerID uuid.
 	return room, nil
 }
 
-func (s *PartService) GetAllRooms(ctx context.Context) ([]*m.Room, error) {
-	rooms, err := s.repo.GetAllRooms(ctx)
+func (s *PartService) GetAllRooms(ctx context.Context, userID uuid.UUID) ([]*m.Room, error) {
+	rooms, err := s.repo.GetAllRooms(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("GetAllRooms: %w", err)
 	}

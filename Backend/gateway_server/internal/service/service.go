@@ -60,3 +60,7 @@ func (s Service) Leave(ctx context.Context, roomId, userId string) error {
 	}
 	return nil
 }
+
+func (s Service) CheckRoomAccess(ctx context.Context, roomID, userID string) (bool, bool, error) {
+	return s.repo.CheckRoomAccess(ctx, roomID, userID)
+}

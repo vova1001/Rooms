@@ -31,7 +31,7 @@ type UserRepository interface {
 
 type RoomRepository interface {
 	CreateRoom(ctx context.Context, name string, ownerID uuid.UUID) (*m.Room, error)
-	GetAllRooms(ctx context.Context) ([]*m.Room, error)
+	GetAllRooms(ctx context.Context, userID uuid.UUID) ([]*m.Room, error)
 	AddUserToRoom(ctx context.Context, roomID, userID uuid.UUID) error
 	GetUsersByRoomID(ctx context.Context, roomID uuid.UUID) ([]*m.User, error)
 }
@@ -99,9 +99,15 @@ func (r *PartRepo) CreateRoom(ctx context.Context, name string, ownerID uuid.UUI
 }
 
 // GetAllRooms
-func (r *PartRepo) GetAllRooms(ctx context.Context) ([]*m.Room, error) {
-	query := `SELECT id, name, owner_id, created_at FROM rooms ORDER BY created_at DESC`
-	rows, err := r.db.QueryContext(ctx, query)
+func (r *PartRepo) GetAllRooms(ctx context.Context, userID uuid.UUID) ([]*m.Room, error) {
+	query := `
+		SELECT r.id, r.name, r.owner_id, r.created_at, r.is_private,
+		       (NOT r.is_private
+		        OR r.owner_id = $1
+		        OR EXISTS (SELECT 1 FROM room_users ru WHERE ru.room_id = r.id AND ru.user_id = $1))
+		FROM rooms r
+		ORDER BY r.created_at DESC`
+	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		if errors.Is(err, context.Canceled) {
 			return nil, fmt.Errorf("GetAllRooms cancelled: %w", err)
@@ -115,7 +121,7 @@ func (r *PartRepo) GetAllRooms(ctx context.Context) ([]*m.Room, error) {
 		var rm m.Room
 		var ru []m.RoomUser
 
-		err := rows.Scan(&rm.ID, &rm.RoomName, &rm.OwnerID, &rm.CreatedAt)
+		err := rows.Scan(&rm.ID, &rm.RoomName, &rm.OwnerID, &rm.CreatedAt, &rm.IsPrivate, &rm.HasAccess)
 		if err != nil {
 			return nil, fmt.Errorf("scan room error: %w", err)
 		}

@@ -40,6 +40,8 @@ type Room struct {
 	RoomName  string    `json:"name"`
 	OwnerID   uuid.UUID `json:"owner_id"`
 	CreatedAt time.Time `json:"created_at"`
+	IsPrivate bool      `json:"is_private"`
+	HasAccess bool      `json:"has_access"`
 	RoomUsers []RoomUser
 }
 

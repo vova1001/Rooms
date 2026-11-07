@@ -2,6 +2,7 @@ package repository
 
 import (
 	"database/sql"
+	"errors"
 	"time"
 
 	"context"
@@ -66,4 +67,22 @@ func (r RepoPart) GetSession(ctx context.Context, key string) ([]byte, error) {
 	}
 
 	return val, nil
+}
+
+func (r RepoPart) CheckRoomAccess(ctx context.Context, roomID, userID string) (bool, bool, error) {
+	var allowed bool
+	err := r.db.QueryRowContext(ctx, `
+		SELECT NOT r.is_private
+		       OR r.owner_id = $2
+		       OR EXISTS (SELECT 1 FROM room_users ru WHERE ru.room_id = r.id AND ru.user_id = $2)
+		FROM rooms r
+		WHERE r.id = $1`, roomID, userID,
+	).Scan(&allowed)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, false, nil
+		}
+		return false, false, fmt.Errorf("check room access: %w", err)
+	}
+	return true, allowed, nil
 }
