@@ -40,6 +40,7 @@ import Avatar from './Avatar';
 import ChatPanel from './ChatPanel';
 import RoomEvents from './RoomEvents';
 import RoomPrivacySettings from './RoomPrivacySettings';
+import Logo from './Logo';
 
 const VOLUME_MAX = 200;
 
@@ -683,9 +684,10 @@ function RoomInterior({ room, user, chat, onLeave, refreshSession, onPrivacyChan
   return (
     <div className={`room-space room-with-events ${isChatOpen && !eventsOpen ? 'chat-open' : ''}`}>
       <header className="room-header">
-        <div>
-          <span className="eyebrow">{room.isPrivate ? 'Закрытая комната' : 'Голосовая комната'}</span>
-          <h1>{room.name}</h1>
+        <button className="room-home-link" type="button" onClick={onLeave} aria-label="На главную"><Logo /></button>
+        <div className="room-heading">
+            <span className="eyebrow">{room.isPrivate ? 'Закрытая комната' : 'Голосовая комната'}</span>
+            <h1>{room.name}</h1>
         </div>
 
         <div className="room-header-actions">

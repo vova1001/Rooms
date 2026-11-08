@@ -42,7 +42,7 @@ export default function CreateEventPanel({ room, onClose, onSubmit, saving, erro
           <label><input type="radio" name="event-payment" checked={!fields.isFree} onChange={() => change('isFree', false)} /><span>Платное</span></label>
         </fieldset>
         {!fields.isFree && <><label htmlFor="event-price">Стоимость, ₽</label><input id="event-price" inputMode="decimal" value={fields.price} onChange={(event) => change('price', event.target.value)} placeholder="Например, 1500" disabled={saving} /><small className="event-form-hint">Стоимость для участников. Оплата в приложении пока не принимается.</small></>}
-        <label htmlFor="event-capacity">Количество мест</label><input id="event-capacity" type="number" min="0" max="1000" step="1" value={fields.capacity} onChange={(event) => change('capacity', event.target.value)} disabled={saving} />
+        <label htmlFor="event-capacity">Количество мест</label><input id="event-capacity" type="number" min="0" max="1000" step="1" value={fields.capacity} onChange={(event) => change('capacity', event.target.value.replace(/^0+(?=\d)/, ''))} disabled={saving} />
         <small className="event-form-hint">0 — без ограничений.</small>
         {(validation || error) && <div className="error-message" role="alert">{validation || error}</div>}
         <button className="primary-button full" type="submit" disabled={saving}><CalendarPlus size={18} />{saving ? 'Создаём…' : 'Создать мероприятие'}</button>

@@ -1573,7 +1573,7 @@ button.profile-block:hover, button.profile-block.active { border-color: rgba(166
 .home-tabs button { padding: 11px 20px; background: transparent; color: var(--muted); border: 0; border-radius: 10px; font-weight: 700; }
 .home-tabs button.is-active { background: var(--accent); color: #11170d; }
 .home-tabs button:focus-visible, .calendar-day:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-.events-layout { display: grid; grid-template-columns: 310px minmax(0, 1fr); grid-template-areas: '. date' 'calendar feed'; gap: 16px 28px; align-items: start; }
+.events-layout { display: grid; grid-template-columns: 310px minmax(0, 1fr); grid-template-areas: 'date date' 'calendar feed'; gap: 16px 28px; align-items: start; }
 .events-calendar { grid-area: calendar; padding: 18px; border: 1px solid var(--border); border-radius: 20px; background: var(--panel); }
 .calendar-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 18px; }
 .calendar-header strong { font-size: 14px; text-transform: capitalize; text-align: center; }
@@ -1599,7 +1599,7 @@ button.profile-block:hover, button.profile-block.active { border-color: rgba(166
 .event-room { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
 .events-error { display: grid; gap: 12px; justify-items: start; }
 @media (max-width: 1100px) { .events-layout { grid-template-columns: 270px minmax(0, 1fr); gap: 18px; } }
-@media (max-width: 850px) { .events-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'calendar' 'date' 'feed'; } .events-calendar { max-width: 380px; width: 100%; } }
+@media (max-width: 850px) { .events-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'date' 'calendar' 'feed'; } .events-calendar { max-width: 380px; width: 100%; } }
 
 /* Навигация приложения и мероприятия внутри комнаты */
 .sidebar-navigation { display: grid; gap: 6px; margin: 20px 0; }
@@ -1611,6 +1611,19 @@ button.profile-block:hover, button.profile-block.active { border-color: rgba(166
 .home-header + .events-layout { margin-top: 30px; }
 .room-with-events { grid-template-rows: auto auto 1fr; }
 .room-tabs { margin: 22px 0 0; }
+.room-header { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 24px; }
+.room-heading { min-width: 0; text-align: center; }
+.room-heading h1 { overflow-wrap: anywhere; }
+.room-header .room-home-link { justify-self: start; }
+.room-header .room-header-actions { justify-self: end; }
+@media (max-width: 1000px) {
+  .room-header { grid-template-columns: minmax(0, 1fr) auto; }
+  .room-heading { grid-column: 1 / -1; grid-row: 2; }
+  .room-header .room-header-actions { grid-column: 2; grid-row: 1; }
+}
+.room-home-link { padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--text); flex-shrink: 0; transition: opacity .2s ease; }
+.room-home-link:hover { opacity: .8; }
+.room-home-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 5px; }
 .room-events-section { min-width: 0; padding: 28px 0 120px; align-self: start; }
 .room-events-heading { margin-bottom: 28px; }
 .room-events-heading h2 { font-size: clamp(24px, 3vw, 36px); letter-spacing: -.04em; margin: 12px 0; }

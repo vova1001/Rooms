@@ -47,6 +47,7 @@ export default function EventsPanel({ refreshSession, roomId, initialDate }) {
 
   return (
     <section className="events-layout" aria-label="Мероприятия">
+      <h2 className="events-date-heading">{new Date(`${selected}T12:00:00`).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</h2>
       <aside className="events-calendar">
         <div className="calendar-header">
           <button className="icon-button" type="button" aria-label="Предыдущий месяц" onClick={() => moveMonth(-1)}><ChevronLeft size={18} /></button>
@@ -65,7 +66,6 @@ export default function EventsPanel({ refreshSession, roomId, initialDate }) {
         <button className="secondary-button full" type="button" onClick={() => { setMonth(new Date(today.getFullYear(), today.getMonth(), 1)); setSelected(dateKey(today)); }}>Сегодня</button>
         <p className="events-timezone">Часовой пояс: {timeZone}</p>
       </aside>
-      <h2 className="events-date-heading">{new Date(`${selected}T12:00:00`).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}</h2>
       <div className="events-feed" aria-busy={loading}>
         {applications.loadError && <div className="event-booking-load-error"><div className="error-message" role="alert">{applications.loadError}</div><button type="button" className="secondary-button" onClick={applications.reload}>Обновить заявки</button></div>}
         {loading ? <div className="empty-state" role="status"><div className="loader" /><p>Загружаем мероприятия…</p></div> : error ? <div className="events-error"><div className="error-banner" role="alert">{error}</div><button type="button" className="secondary-button" onClick={() => setRetry((value) => value + 1)}>Попробовать снова</button></div> : events.length ? events.map((event) => (
